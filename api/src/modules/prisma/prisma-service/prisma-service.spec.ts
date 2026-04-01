@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TmdbCommand } from './tmdb-command';
+import { PrismaService } from './prisma-service';
 
-describe('Tmdb', () => {
-  let provider: TmdbCommand;
+describe('PrismaService', () => {
+  let provider: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TmdbCommand],
+      providers: [PrismaService],
     }).compile();
 
-    provider = module.get<TmdbCommand>(TmdbCommand);
+    provider = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {

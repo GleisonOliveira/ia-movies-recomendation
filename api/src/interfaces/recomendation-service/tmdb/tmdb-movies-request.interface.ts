@@ -12,4 +12,5 @@ export type TmdbSortType = 'asc' | 'desc';
 export interface TmdbMoviesRequestInterface {
   page: number;
   sort_by?: `${TmdbMovieSortByFields}.${TmdbSortType}`;
+  'release_date.gte'?: string;
 }

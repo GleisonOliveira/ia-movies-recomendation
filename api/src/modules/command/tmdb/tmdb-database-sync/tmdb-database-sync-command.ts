@@ -1,16 +1,16 @@
 import { Command, CommandRunner } from 'nest-commander';
 import { Injectable, Logger } from '@nestjs/common';
-import { TmdbConnector } from '@/connectors/tmdb/tmdb-connector';
+import { TmdbConnector } from '@/modules/connectors/tmdb/tmdb-connector';
 import { TmdbMoviesResponseInterface } from '@/interfaces/recomendation-service/tmdb/tmdb-movies-response.interface';
 import { TMDB_CONSTANTS } from '@/constants/tmdb/tmdb.constants';
 
 @Injectable()
 @Command({
-  name: 'tmdb-trainning',
+  name: 'tmdb-database-sync',
   description: 'Populate tmdb vectors',
 })
-export class TmdbCommand extends CommandRunner {
-  private readonly logger = new Logger(TmdbCommand.name);
+export class TmdbDatabaseSyncCommand extends CommandRunner {
+  private readonly logger = new Logger(TmdbDatabaseSyncCommand.name);
 
   constructor(private readonly tmdbConnector: TmdbConnector) {
     super();
@@ -73,7 +73,7 @@ export class TmdbCommand extends CommandRunner {
 
     return this.tmdbConnector.request<TmdbMoviesResponseInterface>('GET', uri, {
       page,
-      sort_by: 'primary_release_date.asc',
+      sort_by: 'primary_release_date.desc',
     });
   }
 }

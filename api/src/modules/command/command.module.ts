@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TmdbCommand } from './tmdb/tmdb/tmdb-command';
-import { TmdbConnector } from '@/connectors/tmdb/tmdb-connector';
+import { TmdbDatabaseSyncCommand } from './tmdb/tmdb-database-sync/tmdb-database-sync-command';
+import { TmdbConnector } from '@/modules/connectors/tmdb/tmdb-connector';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [HttpModule],
-  providers: [TmdbCommand, TmdbConnector],
+  providers: [TmdbDatabaseSyncCommand, TmdbConnector],
 })
 export class CommandModule {}
