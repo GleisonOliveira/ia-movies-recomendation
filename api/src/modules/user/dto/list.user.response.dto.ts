@@ -1,7 +1,4 @@
-import { UserInterface } from '@/modules/interfaces/User/user.interface';
-import { Expose } from 'class-transformer';
+import { User } from '@/generatedprisma/client';
+import { AbstractListResponseDto } from '@/modules/responses/abstract-list-response.dto';
 
-export class ListUserResponseDto {
-  @Expose()
-  data: UserInterface[];
-}
+export class ListUserResponseDto extends AbstractListResponseDto<User> {}

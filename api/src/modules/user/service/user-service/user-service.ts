@@ -9,8 +9,8 @@ export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
   async getAll(params: ListUserDto): Promise<ListUserResponseDto> {
-    const users = await this.userRepository.getAll();
+    const data = await this.userRepository.getAll(params);
 
-    return plainToInstance(ListUserResponseDto, { data: users });
+    return plainToInstance(ListUserResponseDto, data);
   }
 }
