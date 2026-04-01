@@ -19,7 +19,7 @@ model User {
 }
 
 model Movie {
-  id                 Int    @id @default(autoincrement())
+  id                 Int    @id @default(autoincrement()) 
   title              String
   external_id        Int
   original_language  String @db.VarChar(50)

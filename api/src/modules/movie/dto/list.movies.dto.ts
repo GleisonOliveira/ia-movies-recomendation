@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsInt,
   IsOptional,
@@ -7,20 +8,19 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
-export class ListUserDto {
+export class ListMoviesDto {
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Type(() => Number)
-  @IsOptional()
   page?: number = 1;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(50)
   @Type(() => Number)
-  @IsOptional()
   per_page?: number = 10;
 
   @IsString()
@@ -28,5 +28,5 @@ export class ListUserDto {
   @MaxLength(255)
   @Type(() => String)
   @IsOptional()
-  name?: string = undefined;
+  name?: string;
 }

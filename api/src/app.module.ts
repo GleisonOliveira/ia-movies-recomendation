@@ -7,6 +7,7 @@ import { HttpModule } from '@nestjs/axios';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { UserController } from './modules/user/user.controller';
 import { UserModule } from './modules/user/user.module';
+import { MovieModule } from './modules/movie/movie.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UserModule } from './modules/user/user.module';
     RecomendationModule,
     HttpModule,
     UserModule,
+    MovieModule,
   ],
   controllers: [UserController],
 })
