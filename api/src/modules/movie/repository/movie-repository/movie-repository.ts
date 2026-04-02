@@ -28,4 +28,23 @@ export class MovieRepository {
 
     return movies;
   }
+
+  async findById(id: number): Promise<Movie | null> {
+    return this.prismaService.movie.findUnique({
+      where: { id },
+    });
+  }
+
+  async create(data: Prisma.MovieCreateInput): Promise<Movie> {
+    return this.prismaService.movie.create({ data });
+  }
+
+  async findLatestReleaseDate(): Promise<Date | null> {
+    const latestMovie = await this.prismaService.movie.findFirst({
+      orderBy: { release_date: 'desc' },
+      select: { release_date: true },
+    });
+
+    return latestMovie?.release_date || null;
+  }
 }

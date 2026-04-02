@@ -12,7 +12,7 @@ import { MovieModule } from './modules/movie/movie.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // 🔥 importante
+      isGlobal: true,
     }),
     CommandModule,
     ConnectorsModule,

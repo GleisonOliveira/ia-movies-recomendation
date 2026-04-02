@@ -5,7 +5,7 @@ import { MovieController } from './movie.controller';
 
 @Module({
   providers: [MovieRepository, MovieService],
-  exports: [MovieRepository],
+  exports: [MovieRepository, MovieService],
   controllers: [MovieController],
 })
 export class MovieModule {}

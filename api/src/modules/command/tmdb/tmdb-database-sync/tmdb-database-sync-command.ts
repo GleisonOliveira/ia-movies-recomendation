@@ -3,6 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { TmdbConnector } from '@/modules/connectors/tmdb/tmdb-connector';
 import { TmdbMoviesResponseInterface } from '@/interfaces/recomendation-service/tmdb/tmdb-movies-response.interface';
 import { TMDB_CONSTANTS } from '@/constants/tmdb/tmdb.constants';
+import { MovieService } from '@/modules/movie/service/movie-service/movie-service';
+import { MovieCreateDto } from '@/modules/movie/dto/movie.create.dto';
+import { TmdbMoviesRequestInterface } from '@/interfaces/recomendation-service/tmdb/tmdb-movies-request.interface';
 
 @Injectable()
 @Command({
@@ -12,7 +15,10 @@ import { TMDB_CONSTANTS } from '@/constants/tmdb/tmdb.constants';
 export class TmdbDatabaseSyncCommand extends CommandRunner {
   private readonly logger = new Logger(TmdbDatabaseSyncCommand.name);
 
-  constructor(private readonly tmdbConnector: TmdbConnector) {
+  constructor(
+    private readonly tmdbConnector: TmdbConnector,
+    private readonly movieService: MovieService,
+  ) {
     super();
   }
 
@@ -61,9 +67,40 @@ export class TmdbDatabaseSyncCommand extends CommandRunner {
   async #processMovies({
     results,
   }: TmdbMoviesResponseInterface): Promise<void> {
-    results.forEach((movie) => {
-      this.logger.log(movie.title);
-    });
+    for (const movie of results) {
+      this.logger.log(`Processing movie: ${movie.title}`);
+
+      const {
+        title,
+        id,
+        original_language,
+        overview,
+        popularity,
+        poster_path,
+        adult,
+        release_date,
+        vote_average,
+        vote_count,
+      } = movie;
+      const existingMovie = await this.movieService.getById(id);
+
+      if (!existingMovie) {
+        await this.movieService.createMovie(
+          new MovieCreateDto(
+            title,
+            id,
+            original_language,
+            overview,
+            popularity,
+            poster_path,
+            adult,
+            new Date(release_date),
+            vote_average,
+            vote_count,
+          ),
+        );
+      }
+    }
   }
 
   async #getMovies(page: number): Promise<TmdbMoviesResponseInterface> {
@@ -71,9 +108,21 @@ export class TmdbDatabaseSyncCommand extends CommandRunner {
       movies: { uri },
     } = TMDB_CONSTANTS;
 
-    return this.tmdbConnector.request<TmdbMoviesResponseInterface>('GET', uri, {
+    const latestReleaseDate = await this.movieService.getLatestReleaseDate();
+
+    const queryParams: TmdbMoviesRequestInterface = {
       page,
-      sort_by: 'primary_release_date.desc',
-    });
+      sort_by: 'primary_release_date.asc',
+    };
+
+    if (latestReleaseDate) {
+      queryParams['release_date.gte'] = latestReleaseDate.toDateString();
+    }
+
+    return this.tmdbConnector.request<TmdbMoviesResponseInterface>(
+      'GET',
+      uri,
+      queryParams,
+    );
   }
 }

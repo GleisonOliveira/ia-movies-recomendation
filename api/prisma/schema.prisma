@@ -25,7 +25,7 @@ model Movie {
   original_language  String @db.VarChar(50)
   overview           String
   popularity         Float
-  poster_path        String @db.VarChar(255)
+  poster_path        String? @db.VarChar(255)
   adult              Boolean
   release_date       DateTime
   vote_average       Decimal    
