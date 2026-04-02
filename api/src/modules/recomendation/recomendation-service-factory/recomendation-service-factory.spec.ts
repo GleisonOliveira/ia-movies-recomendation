@@ -9,7 +9,9 @@ describe('RecomendationServiceFactory', () => {
       providers: [RecomendationServiceFactory],
     }).compile();
 
-    provider = module.get<RecomendationServiceFactory>(RecomendationServiceFactory);
+    provider = module.get<RecomendationServiceFactory>(
+      RecomendationServiceFactory,
+    );
   });
 
   it('should be defined', () => {

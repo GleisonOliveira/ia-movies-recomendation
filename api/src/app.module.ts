@@ -8,6 +8,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
 import { UserController } from './modules/user/user.controller';
 import { UserModule } from './modules/user/user.module';
 import { MovieModule } from './modules/movie/movie.module';
+import { NeuralComputerModule } from './modules/neural-computer/neural-computer.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { MovieModule } from './modules/movie/movie.module';
     HttpModule,
     UserModule,
     MovieModule,
+    NeuralComputerModule,
   ],
   controllers: [UserController],
 })

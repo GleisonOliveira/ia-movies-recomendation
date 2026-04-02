@@ -3,6 +3,6 @@ import { RecomendationServiceFactory } from './recomendation-service-factory/rec
 import { Tmdb } from './tmdb/tmdb';
 
 @Module({
-  providers: [RecomendationServiceFactory, Tmdb]
+  providers: [RecomendationServiceFactory, Tmdb],
 })
 export class RecomendationModule {}
