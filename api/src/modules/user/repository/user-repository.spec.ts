@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../prisma/prisma-service/prisma-service';
 import { UserRepository } from './user-repository';
@@ -11,16 +11,19 @@ describe('UserRepository', () => {
   const prismaService = {
     user: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
       create: jest.fn(),
       count: jest.fn(),
     },
     userMovie: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      delete: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
     },
     movie: {
+      findUnique: jest.fn(),
       findMany: jest.fn(),
     },
   };
@@ -79,6 +82,8 @@ describe('UserRepository', () => {
   });
 
   it('should create the link when it does not exist', async () => {
+    prismaService.user.findUnique.mockResolvedValue({ id: 1 });
+    prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
     prismaService.userMovie.findUnique.mockResolvedValue(null);
     prismaService.userMovie.create.mockResolvedValue({
       user_id: 1,
@@ -111,6 +116,8 @@ describe('UserRepository', () => {
   });
 
   it('should throw conflict when the link already exists', async () => {
+    prismaService.user.findUnique.mockResolvedValue({ id: 1 });
+    prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
     prismaService.userMovie.findUnique.mockResolvedValue({
       user_id: 1,
       movie_id: 2,
@@ -121,6 +128,51 @@ describe('UserRepository', () => {
     );
 
     expect(prismaService.userMovie.create).not.toHaveBeenCalled();
+  });
+
+  it('should remove the link from a user', async () => {
+    prismaService.user.findUnique.mockResolvedValue({ id: 1 });
+    prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
+    prismaService.userMovie.delete.mockResolvedValue({
+      user_id: 1,
+      movie_id: 2,
+    });
+
+    await expect(repository.removeMovieFromUser(1, 2)).resolves.toEqual({
+      user_id: 1,
+      movie_id: 2,
+    });
+
+    expect(prismaService.userMovie.delete).toHaveBeenCalledWith({
+      where: {
+        user_id_movie_id: {
+          user_id: 1,
+          movie_id: 2,
+        },
+      },
+    });
+  });
+
+  it('should throw not found when user does not exist', async () => {
+    prismaService.user.findUnique.mockResolvedValue(null);
+
+    await expect(repository.addMovieToUser(1, 2)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+
+    expect(prismaService.movie.findUnique).not.toHaveBeenCalled();
+    expect(prismaService.userMovie.create).not.toHaveBeenCalled();
+  });
+
+  it('should throw not found when movie does not exist', async () => {
+    prismaService.user.findUnique.mockResolvedValue({ id: 1 });
+    prismaService.movie.findUnique.mockResolvedValue(null);
+
+    await expect(repository.removeMovieFromUser(1, 2)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+
+    expect(prismaService.userMovie.delete).not.toHaveBeenCalled();
   });
 
   it('should get movies by user id', async () => {

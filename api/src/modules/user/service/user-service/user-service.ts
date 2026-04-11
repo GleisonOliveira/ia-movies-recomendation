@@ -36,6 +36,15 @@ export class UserService {
     return plainToInstance(UserResponseDto, user);
   }
 
+  async removeMovieFromUser(data: AddUserMovieDto): Promise<UserResponseDto> {
+    const user = await this.userRepository.removeMovieFromUser(
+      data.user_id,
+      data.movie_id,
+    );
+
+    return plainToInstance(UserResponseDto, user);
+  }
+
   async getMoviesByUserId(
     params: ListUserMoviesDto,
   ): Promise<ListMoviesResponseDto> {

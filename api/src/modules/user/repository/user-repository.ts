@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { createPaginator } from 'prisma-pagination';
 import { ListUserDto } from '../dto/list.user.dto';
 import { ListUserMoviesDto } from '../dto/list-user-movies.dto';
@@ -39,6 +43,9 @@ export class UserRepository {
   }
 
   async addMovieToUser(userId: number, movieId: number) {
+    await this.ensureUserExists(userId);
+    await this.ensureMovieExists(movieId);
+
     const existing = await this.prismaService.userMovie.findUnique({
       where: {
         user_id_movie_id: {
@@ -60,6 +67,20 @@ export class UserRepository {
       include: {
         user: true,
         movie: true,
+      },
+    });
+  }
+
+  async removeMovieFromUser(userId: number, movieId: number) {
+    await this.ensureUserExists(userId);
+    await this.ensureMovieExists(movieId);
+
+    return this.prismaService.userMovie.delete({
+      where: {
+        user_id_movie_id: {
+          user_id: userId,
+          movie_id: movieId,
+        },
       },
     });
   }
@@ -86,5 +107,27 @@ export class UserRepository {
         },
       }),
     };
+  }
+
+  private async ensureUserExists(userId: number) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
+  private async ensureMovieExists(movieId: number) {
+    const movie = await this.prismaService.movie.findUnique({
+      where: { id: movieId },
+      select: { id: true },
+    });
+
+    if (!movie) {
+      throw new NotFoundException('Movie not found');
+    }
   }
 }

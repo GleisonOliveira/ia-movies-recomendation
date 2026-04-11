@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -47,6 +47,16 @@ export class UserController {
     @Body() params: AddUserMovieDto,
   ): Promise<UserResponseDto> {
     return this.userService.addMovieToUser(params);
+  }
+
+  @Delete('movie')
+  @ApiOperation({ summary: 'Remove a movie from a user' })
+  @ApiBody({ type: AddUserMovieDto })
+  @ApiOkResponse({ type: UserResponseDto })
+  async removeMovieFromUser(
+    @Body() params: AddUserMovieDto,
+  ): Promise<UserResponseDto> {
+    return this.userService.removeMovieFromUser(params);
   }
 
   @Get('movie')

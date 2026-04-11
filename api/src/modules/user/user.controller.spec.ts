@@ -16,6 +16,7 @@ describe('UserController', () => {
     getAll: jest.fn(),
     create: jest.fn(),
     addMovieToUser: jest.fn(),
+    removeMovieFromUser: jest.fn(),
     getMoviesByUserId: jest.fn(),
   };
 
@@ -84,6 +85,21 @@ describe('UserController', () => {
 
     await expect(controller.addMovieToUser(dto)).resolves.toBe(response);
     expect(userService.addMovieToUser).toHaveBeenCalledWith(dto);
+  });
+
+  it('should pass remove movie dto to user service', async () => {
+    const dto = new AddUserMovieDto();
+    dto.user_id = 1;
+    dto.movie_id = 2;
+
+    const response = new UserResponseDto();
+    response.id = 1;
+    response.name = 'John';
+    response.age = 30;
+    userService.removeMovieFromUser.mockResolvedValue(response);
+
+    await expect(controller.removeMovieFromUser(dto)).resolves.toBe(response);
+    expect(userService.removeMovieFromUser).toHaveBeenCalledWith(dto);
   });
 
   it('should pass user movies query to user service', async () => {

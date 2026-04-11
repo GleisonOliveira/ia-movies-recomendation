@@ -12,16 +12,19 @@ describe('UserService', () => {
   const prismaService = {
     user: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
       create: jest.fn(),
       count: jest.fn(),
     },
     userMovie: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      delete: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
     },
     movie: {
+      findUnique: jest.fn(),
       findMany: jest.fn(),
     },
   };
@@ -88,6 +91,8 @@ describe('UserService', () => {
     dto.user_id = 1;
     dto.movie_id = 2;
 
+    prismaService.user.findUnique.mockResolvedValue({ id: 1 });
+    prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
     prismaService.userMovie.findUnique.mockResolvedValue(null);
     prismaService.userMovie.create.mockResolvedValue({
       id: 1,
@@ -96,6 +101,26 @@ describe('UserService', () => {
     });
 
     await expect(service.addMovieToUser(dto)).resolves.toEqual({
+      id: 1,
+      name: 'John',
+      age: 30,
+    });
+  });
+
+  it('should remove a movie from a user', async () => {
+    const dto = new AddUserMovieDto();
+    dto.user_id = 1;
+    dto.movie_id = 2;
+
+    prismaService.user.findUnique.mockResolvedValue({ id: 1 });
+    prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
+    prismaService.userMovie.delete.mockResolvedValue({
+      id: 1,
+      name: 'John',
+      age: 30,
+    });
+
+    await expect(service.removeMovieFromUser(dto)).resolves.toEqual({
       id: 1,
       name: 'John',
       age: 30,
