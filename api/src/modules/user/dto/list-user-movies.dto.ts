@@ -1,16 +1,14 @@
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  MaxLength,
-  Min,
-  MinLength,
-} from 'class-validator';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
-export class ListMoviesDto {
+export class ListUserMoviesDto {
+  @ApiPropertyOptional({ example: 1, minimum: 1 })
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  user_id: number = 0;
+
   @ApiPropertyOptional({ example: 1, minimum: 1, default: 1 })
   @IsOptional()
   @IsInt()
@@ -25,12 +23,4 @@ export class ListMoviesDto {
   @Max(50)
   @Type(() => Number)
   per_page?: number = 10;
-
-  @ApiPropertyOptional({ example: 'Inception', maxLength: 255 })
-  @IsString()
-  @MinLength(1)
-  @MaxLength(255)
-  @Type(() => String)
-  @IsOptional()
-  name?: string;
 }

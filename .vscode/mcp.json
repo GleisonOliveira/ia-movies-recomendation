@@ -1,0 +1,13 @@
+{
+	"servers": {
+		"docker-mcp-server": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@0xshariq/docker-mcp-server@latest"
+			]
+		}
+	},
+	"inputs": []
+}

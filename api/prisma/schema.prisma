@@ -16,6 +16,9 @@ model User {
   id        Int   @id @default(autoincrement())
   name      String
   age       Int
+  movies    UserMovie[]
+
+  @@map("user")
 }
 
 model Movie {
@@ -30,4 +33,18 @@ model Movie {
   release_date       DateTime
   vote_average       Decimal    
   vote_count         Int    
+  users              UserMovie[]
+
+  @@map("movie")
+}
+
+model UserMovie {
+  user_id Int
+  movie_id Int
+  user     User  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  movie    Movie @relation(fields: [movie_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([user_id, movie_id])
+  @@index([movie_id])
+  @@map("user_movie")
 }
