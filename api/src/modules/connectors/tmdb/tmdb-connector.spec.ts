@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { TmdbConnector } from './tmdb-connector';
 
 describe('Tmdb', () => {
@@ -6,7 +8,11 @@ describe('Tmdb', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TmdbConnector],
+      providers: [
+        TmdbConnector,
+        { provide: HttpService, useValue: {} },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
+      ],
     }).compile();
 
     provider = module.get<TmdbConnector>(TmdbConnector);
