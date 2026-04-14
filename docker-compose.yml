@@ -16,9 +16,13 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PORT=${POSTGRES_PORT}
+      - QDRANT_URL=http://qdrant:6333/readyz
+      - QDRANT_MAX_WAIT_SECONDS=60
     depends_on:
       db:
         condition: service_healthy
+      qdrant-ready:
+        condition: service_completed_successfully
   db:
     image: postgres:15
     restart: always
@@ -35,5 +39,22 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    environment:
+      - QDRANT__SERVICE__HOST=0.0.0.0
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: always
+  qdrant-ready:
+    image: curlimages/curl:8.10.1
+    depends_on:
+      qdrant:
+        condition: service_started
+    command: sh -c 'until curl -fsS http://qdrant:6333/readyz >/dev/null; do sleep 1; done'
+    restart: "no"
 volumes:
   pgdata:
+  qdrant_storage:

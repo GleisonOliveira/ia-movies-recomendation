@@ -9,11 +9,14 @@ import { UserController } from './modules/user/user.controller';
 import { UserModule } from './modules/user/user.module';
 import { MovieModule } from './modules/movie/movie.module';
 import { NeuralComputerModule } from './modules/neural-computer/neural-computer.module';
+import { QdrantModule } from './modules/qdrant/qdrant.module';
+import { envSchema } from './config/env.schema';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: (config) => envSchema.parse(config),
     }),
     CommandModule,
     ConnectorsModule,
@@ -23,6 +26,7 @@ import { NeuralComputerModule } from './modules/neural-computer/neural-computer.
     UserModule,
     MovieModule,
     NeuralComputerModule,
+    QdrantModule,
   ],
   controllers: [UserController],
 })

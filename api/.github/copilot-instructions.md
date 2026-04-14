@@ -25,10 +25,17 @@ This document provides guidelines for AI agents working on the Movies Recommenda
 
 ## Architecture and Conventions
 
+### Updated version and doc
+- When implementing new features or fixing bugs, refer to the latest version of the codebase and documentation with context7 to ensure consistency with current patterns and practices.
+
 ### Layered Architecture
 - **Controllers:** Handle HTTP requests and responses.
 - **Services:** Business logic layer.
 - **Repositories:** Database access layer using Prisma ORM.
+
+### General rules
+- Always remove unused imports and code to maintain cleanliness.
+- Follow existing code patterns for consistency.
 
 ### Module Organization
 - Domain-driven structure: `user`, `movie`, `recomendation`, `connectors`, `command`, `prisma`.
@@ -46,6 +53,14 @@ This document provides guidelines for AI agents working on the Movies Recommenda
 ### Path Aliases
 - `@/*` → `src/*`
 - `@/generated*` → `generated/prisma/`
+
+### Ignores
+- Always ignore `node_modules/`, `dist/`, and `generated/` directories in prompts to avoid irrelevant suggestions.
+
+### Testing Conventions
+- Use Jest for unit and e2e testing.
+- Follow existing test patterns and expand coverage where possible.
+- Always create a test for each new feature or bug fix.
 
 ---
 
