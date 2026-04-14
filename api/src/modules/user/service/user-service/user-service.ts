@@ -27,13 +27,18 @@ export class UserService {
     return plainToInstance(UserResponseDto, user);
   }
 
-  async addMovieToUser(data: AddUserMovieDto): Promise<UserResponseDto> {
-    const user = await this.userRepository.addMovieToUser(
+  async addMovieToUser(
+    data: AddUserMovieDto,
+  ): Promise<{ user: UserResponseDto; alreadyLinked: boolean }> {
+    const result = await this.userRepository.addMovieToUser(
       data.user_id,
       data.movie_id,
     );
 
-    return plainToInstance(UserResponseDto, user);
+    return {
+      user: plainToInstance(UserResponseDto, result.user),
+      alreadyLinked: result.alreadyLinked,
+    };
   }
 
   async removeMovieFromUser(data: AddUserMovieDto): Promise<UserResponseDto> {

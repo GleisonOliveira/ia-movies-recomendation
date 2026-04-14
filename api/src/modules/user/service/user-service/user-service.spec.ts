@@ -95,15 +95,12 @@ describe('UserService', () => {
     prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
     prismaService.userMovie.findUnique.mockResolvedValue(null);
     prismaService.userMovie.create.mockResolvedValue({
-      id: 1,
-      name: 'John',
-      age: 30,
+      user: { id: 1, name: 'John', age: 30 },
     });
 
     await expect(service.addMovieToUser(dto)).resolves.toEqual({
-      id: 1,
-      name: 'John',
-      age: 30,
+      alreadyLinked: false,
+      user: { id: 1, name: 'John', age: 30 },
     });
   });
 

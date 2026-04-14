@@ -76,15 +76,43 @@ describe('UserController', () => {
     const dto = new AddUserMovieDto();
     dto.user_id = 1;
     dto.movie_id = 2;
+    const res = {
+      status: jest.fn().mockReturnThis(),
+    };
 
     const response = new UserResponseDto();
     response.id = 1;
     response.name = 'John';
     response.age = 30;
-    userService.addMovieToUser.mockResolvedValue(response);
+    userService.addMovieToUser.mockResolvedValue({
+      alreadyLinked: false,
+      user: response,
+    });
 
-    await expect(controller.addMovieToUser(dto)).resolves.toBe(response);
+    await expect(controller.addMovieToUser(dto, res as never)).resolves.toBe(response);
     expect(userService.addMovieToUser).toHaveBeenCalledWith(dto);
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  it('should return no content when movie is already linked', async () => {
+    const dto = new AddUserMovieDto();
+    dto.user_id = 1;
+    dto.movie_id = 2;
+    const res = {
+      status: jest.fn().mockReturnThis(),
+    };
+
+    const response = new UserResponseDto();
+    response.id = 1;
+    response.name = 'John';
+    response.age = 30;
+    userService.addMovieToUser.mockResolvedValue({
+      alreadyLinked: true,
+      user: response,
+    });
+
+    await expect(controller.addMovieToUser(dto, res as never)).resolves.toBe(response);
+    expect(res.status).toHaveBeenCalledWith(204);
   });
 
   it('should pass remove movie dto to user service', async () => {

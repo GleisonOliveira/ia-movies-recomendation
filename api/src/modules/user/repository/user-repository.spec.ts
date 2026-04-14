@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../prisma/prisma-service/prisma-service';
 import { UserRepository } from './user-repository';
@@ -82,17 +82,18 @@ describe('UserRepository', () => {
   });
 
   it('should create the link when it does not exist', async () => {
-    prismaService.user.findUnique.mockResolvedValue({ id: 1 });
+    prismaService.user.findUnique.mockResolvedValue({ id: 1, name: 'John', age: 30 });
     prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
     prismaService.userMovie.findUnique.mockResolvedValue(null);
     prismaService.userMovie.create.mockResolvedValue({
       user_id: 1,
       movie_id: 2,
+      user: { id: 1, name: 'John', age: 30 },
     });
 
     await expect(repository.addMovieToUser(1, 2)).resolves.toEqual({
-      user_id: 1,
-      movie_id: 2,
+      alreadyLinked: false,
+      user: { id: 1, name: 'John', age: 30 },
     });
 
     expect(prismaService.userMovie.findUnique).toHaveBeenCalledWith({
@@ -115,23 +116,25 @@ describe('UserRepository', () => {
     });
   });
 
-  it('should throw conflict when the link already exists', async () => {
-    prismaService.user.findUnique.mockResolvedValue({ id: 1 });
+  it('should return success when the link already exists', async () => {
+    prismaService.user.findUnique.mockResolvedValue({ id: 1, name: 'John', age: 30 });
     prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
     prismaService.userMovie.findUnique.mockResolvedValue({
       user_id: 1,
       movie_id: 2,
     });
 
-    await expect(repository.addMovieToUser(1, 2)).rejects.toBeInstanceOf(
-      ConflictException,
-    );
+    await expect(repository.addMovieToUser(1, 2)).resolves.toEqual({
+      alreadyLinked: true,
+      user: { id: 1, name: 'John', age: 30 },
+    });
 
     expect(prismaService.userMovie.create).not.toHaveBeenCalled();
+    expect(prismaService.user.findUnique).toHaveBeenCalledTimes(2);
   });
 
   it('should remove the link from a user', async () => {
-    prismaService.user.findUnique.mockResolvedValue({ id: 1 });
+    prismaService.user.findUnique.mockResolvedValue({ id: 1, name: 'John', age: 30 });
     prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
     prismaService.userMovie.delete.mockResolvedValue({
       user_id: 1,

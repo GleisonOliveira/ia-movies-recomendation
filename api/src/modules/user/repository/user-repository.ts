@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { createPaginator } from 'prisma-pagination';
 import { ListUserDto } from '../dto/list.user.dto';
 import { ListUserMoviesDto } from '../dto/list-user-movies.dto';
@@ -56,10 +52,10 @@ export class UserRepository {
     });
 
     if (existing) {
-      throw new ConflictException('Movie already linked to this user');
+      return { alreadyLinked: true, user: await this.getUserById(userId) };
     }
 
-    return this.prismaService.userMovie.create({
+    const userMovie = await this.prismaService.userMovie.create({
       data: {
         user_id: userId,
         movie_id: movieId,
@@ -69,6 +65,8 @@ export class UserRepository {
         movie: true,
       },
     });
+
+    return { alreadyLinked: false, user: userMovie.user };
   }
 
   async removeMovieFromUser(userId: number, movieId: number) {
@@ -129,5 +127,17 @@ export class UserRepository {
     if (!movie) {
       throw new NotFoundException('Movie not found');
     }
+  }
+
+  private async getUserById(userId: number) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 }

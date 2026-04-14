@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -14,6 +23,7 @@ import { AddUserMovieDto } from './dto/add-user-movie.dto';
 import { ListUserMoviesDto } from './dto/list-user-movies.dto';
 import { ListMoviesResponseDto } from '../movie/dto/list.movies.response.dto';
 import { UserService } from './service/user-service/user-service';
+import type { Response } from 'express';
 
 @ApiTags('user')
 @Controller('user')
@@ -45,8 +55,19 @@ export class UserController {
   @ApiOkResponse({ type: UserResponseDto })
   async addMovieToUser(
     @Body() params: AddUserMovieDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<UserResponseDto> {
-    return this.userService.addMovieToUser(params);
+    const result = await this.userService.addMovieToUser(params);
+
+    if (result.alreadyLinked) {
+      res.status(HttpStatus.NO_CONTENT);
+
+      return result.user;
+    }
+
+    res.status(HttpStatus.CREATED);
+
+    return result.user;
   }
 
   @Delete('movie')
