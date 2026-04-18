@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import type { User } from '@/services/user/UserService';
 
 type Props = {
@@ -8,17 +8,34 @@ type Props = {
 
 export function UserListItem({ user, onClick }: Props) {
   return (
-    <Button
-      variant="outlined"
+    <Paper
+      elevation={0}
       onClick={() => onClick(user)}
-      sx={{ justifyContent: 'space-between' }}
+      sx={{
+        p: 2,
+        cursor: 'pointer',
+        border: '1px solid',
+        borderColor: 'divider',
+        background: 'linear-gradient(135deg, rgba(139,211,255,0.08), rgba(255,255,255,0.02))',
+        transition: 'transform 160ms ease, border-color 160ms ease, background 160ms ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          borderColor: 'primary.main',
+          background: 'linear-gradient(135deg, rgba(139,211,255,0.15), rgba(255,255,255,0.04))',
+        },
+      }}
     >
-      <Box sx={{ textAlign: 'left' }}>
-        <Typography variant="subtitle1">{user.name}</Typography>
-        <Typography variant="body2" color="text.secondary">
-          {user.age} anos
-        </Typography>
-      </Box>
-    </Button>
+      <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ textAlign: 'left' }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            {user.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Usuário cadastrado
+          </Typography>
+        </Box>
+        <Chip label={`${user.age} anos`} color="primary" variant="outlined" />
+      </Stack>
+    </Paper>
   );
 }

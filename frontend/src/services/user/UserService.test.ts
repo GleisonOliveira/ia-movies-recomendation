@@ -1,4 +1,5 @@
 import { UserService } from './UserService';
+import type { AxiosInstance } from 'axios';
 
 describe('UserService', () => {
   it('parses users list response', async () => {
@@ -12,5 +13,19 @@ describe('UserService', () => {
     const response = await service.getAll();
 
     expect(response.data[0]?.name).toBe('Ana');
+  });
+
+  it('creates a user', async () => {
+    const httpClient = {
+      post: jest.fn().mockResolvedValue({
+        data: { id: 2, name: 'Bruno', age: 31 },
+      }),
+    } as unknown as AxiosInstance;
+
+    const service = new UserService(httpClient);
+    const response = await service.create({ name: 'Bruno', age: 31 });
+
+    expect((httpClient.post as jest.Mock)).toHaveBeenCalledWith('/user', { name: 'Bruno', age: 31 });
+    expect(response).toEqual({ id: 2, name: 'Bruno', age: 31 });
   });
 });

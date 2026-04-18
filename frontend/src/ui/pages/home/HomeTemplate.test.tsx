@@ -45,15 +45,21 @@ jest.mock('./useMovieHome', () => ({
 }));
 
 jest.mock('@/store/hooks', () => ({
-  useAppSelector: (selector: (state: { home: { selectedUser: User } }) => User | null) =>
-    selector({ home: { selectedUser: user } }),
+  useAppDispatch: () => jest.fn(),
+  useAppSelector: (selector: (state: { home: { selectedUser: User; createUserModal: { open: boolean; errors: { name: string | null; age: string | null }; name: string; age: string; submitting: boolean } } }) => unknown) =>
+    selector({
+      home: {
+        selectedUser: user,
+        createUserModal: { open: false, errors: { name: null, age: null }, name: '', age: '', submitting: false },
+      },
+    }),
 }));
 
 describe('HomeTemplate', () => {
   it('renders the users section', () => {
     render(<HomeTemplate />);
 
-    expect(screen.getByText('Usuários')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Novo usuário' })).toBeInTheDocument();
     expect(screen.getByText('Ana')).toBeInTheDocument();
   });
 });

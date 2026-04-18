@@ -1,8 +1,14 @@
-import { Alert, Box, Card, CardContent, Pagination, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Dialog, Pagination, Skeleton, Stack, Typography } from '@mui/material';
+import { Add } from '@mui/icons-material';
 import { useUserHome } from './useUserHome';
 import { UserListItem } from './UserListItem';
+import { UserCreateForm } from './UserCreateForm';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { openCreateUserModal, closeCreateUserModal } from '@/store/home/homeSlice';
 
 export function UserList() {
+  const dispatch = useAppDispatch();
+  const createOpen = useAppSelector((state) => state.home.createUserModal.open);
   const {
     userState: { loading: usersLoading, error: usersError, data: usersData, meta: usersMeta, page: usersPage },
     userActions: { setUsersPage, openUserDrawer },
@@ -10,15 +16,50 @@ export function UserList() {
 
   return (
     <Stack spacing={3}>
+      <Card
+        sx={{
+          background: 'linear-gradient(135deg, rgba(139,211,255,0.12), rgba(16,25,47,0.96))',
+          border: '1px solid rgba(139,211,255,0.2)',
+        }}
+      >
+        <CardContent>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}
+          >
+            <Box>
+              <Typography variant="overline" color="primary">
+                Usuários
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                Gerencie os cadastros
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Crie perfis, navegue entre páginas e abra um usuário para ver os filmes associados.
+              </Typography>
+            </Box>
+            <Button startIcon={<Add />} variant="contained" onClick={() => dispatch(openCreateUserModal())}>
+              Novo usuário
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+      <Dialog open={createOpen} onClose={() => dispatch(closeCreateUserModal())} fullWidth maxWidth="sm">
+        <UserCreateForm />
+      </Dialog>
       {usersError ? <Alert severity="error">{usersError}</Alert> : null}
       {usersLoading ? (
-        <Skeleton variant="rectangular" height={280} />
+        <Skeleton variant="rectangular" height={320} sx={{ borderRadius: 4 }} />
       ) : (
-        <Card>
+        <Card
+          sx={{
+            border: '1px solid rgba(255,255,255,0.08)',
+            background:
+              'linear-gradient(180deg, rgba(16,25,47,0.95), rgba(11,16,32,0.98))',
+          }}
+        >
           <CardContent>
-            <Typography variant="h5" gutterBottom>
-              Usuários
-            </Typography>
             <Stack spacing={1.5}>
               {usersData.map((user) => (
                 <UserListItem key={user.id} user={user} onClick={openUserDrawer} />
