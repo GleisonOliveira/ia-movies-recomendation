@@ -1,121 +1,70 @@
-# AI Agent Instructions for the API Project
+API Agent (NestJS + Prisma + Qdrant)
 
-## Project Overview
-This is a REST API for movie recommendations, built using NestJS and Prisma.
+Objective:
+- REST API for movie recommendations
 
-## Objective
-The API provides personalized movie recommendations by leveraging data from online catalogs and training models based on this data.
+Architecture:
+- Modular NestJS
+- Prisma ORM
+- Qdrant
+- DDD (clear boundaries)
 
-## Architecture
-- Modular NestJS framework.
-- Prisma ORM for database interactions.
-- Qdrant DB as the database.
-- Domain-driven design with clear separation of concerns.
+Core Rules:
+- DB access via repositories only
+- No Prisma in controllers
+- Business logic in services
+- Controllers = no logic
+- Use DTOs for request/response validation
+- Use async/await for IO
 
-## General Rules
-1. **Database Access**: 
-   - Always access the database through repositories.
-   - All database queries must be parameterized (no string concatenation).
+State & Structure:
+- Modules contain their own services/repos/dtos
+- Shared interfaces → interfaces/
+- Constants → constants/
+- Env → .env
 
-2. **Business Logic**:
-   - Business rules must reside in services.
-   - Controllers should not contain any logic.
+Database:
+- Snake_case tables/fields
+- Explicit relations + constraints
+- Laravel-style naming (user_movies, etc.)
+- Always parameterized queries
 
-3. **Shared Interfaces**:
-   - Place shared interfaces in the `interfaces` folder, following the hierarchical structure of the resource.
+Pagination:
+- Required on all list endpoints
+- Use page + per_page
+- Use createPaginator (Prisma models)
 
-4. **Configuration Constants**:
-   - Store configuration constants in the `constants` folder, following the hierarchical structure of the resource.
-
-5. **Environment Variables**:
-   - Secrets and configurations must be stored in `.env` files.
-
-6. **DTOs**:
-   - All requests with parameters must use DTOs for validation.
-   - Responses must also use DTOs, preferably extending `AbstractListResponseDto` for lists.
-
-7. **Pagination**:
-   - Listing endpoints must always be paginated using `page` and `per_page`.
-   - Use `createPaginator` for queries, always referencing Prisma-generated tables.
-
-8. **Code Quality**:
-   - Follow SOLID principles.
-   - Always inject dependencies.
-   - Write small, self-contained methods. If necessary, create separate classes or services to maintain the Single Responsibility Principle (SRP).
-
-9. **Testing**:
-   - Tests are mandatory. For new classes, generate tests and execute them with `npm run test`.
-
-10. **Naming and Best Practices**:
-    - Use descriptive names and adhere to best practices.
-    - Table fields must use `snake_case` and include constraints for foreign keys.
-
-11. **Async/Await**:
-    - Use `async/await` for IO-heavy tasks.
-
-12. **Module Organization**:
-    - Repositories, services, classes, and DTOs related to a module must reside within the module.
-
-13. **Prisma**:
-    - Tables should use explicit relationships and constraints for relationships.
-    - Tables should use laravel namings, like user_movies and user_movie_ratings tables.
-    - Tables should use snake_case names
-
-## Additional Notes
-- Refer to `architecture-and-conventions.md` for detailed patterns and examples.
-- Use the `@/generated` alias for Prisma imports.
-- Follow the `prisma/schema.prisma` file for database schema changes.
-
-## Agent Behavior
-
-- Always analyze existing code before creating new files.
-- Prefer modifying existing files instead of creating duplicates.
-- Ask for clarification when requirements are ambiguous.
-- Never break existing patterns or architecture.
-- Follow project rules strictly, even if alternative solutions exist.
-
-## Rule Priority
-
-1. Architecture rules (highest priority)
-2. Database rules
-3. Code style rules (lowest priority)
-
-## Pagination Pattern
-
-Example:
-
-```ts
-const paginator = createPaginator({ perPage });
-
-return paginator(model, {
-  where: {},
-  orderBy: { created_at: 'desc' }
-});
-```
-
-## Testing Rules
-
-- Use Jest
-- Follow AAA pattern (Arrange, Act, Assert)
-- Mock external dependencies
-- Test services, not controllers
-
-## Response Format
-
-All responses must follow:
-
+Responses:
 {
   data: any,
-  meta?: {
-    total: number,
-    page: number,
-    lastPage: number
-  }
+  meta?: { total, page, lastPage }
 }
 
-## Anti-Patterns (Never do this)
+Testing:
+- Jest
+- AAA pattern
+- Mock external deps
+- Test services (not controllers)
+- Tests required
 
-- Do not access Prisma directly in controllers
-- Do not create business logic in DTOs
-- Do not duplicate logic across services
-- Do not return raw database entities
+Agent Behavior:
+- Read existing code first
+- Prefer editing over creating
+- Ask if unclear
+- Do not break patterns
+
+Anti-patterns:
+- No Prisma in controllers
+- No logic in DTOs
+- No duplicated logic
+- No raw DB responses
+
+Priority:
+1. Architecture
+2. Database
+3. Style
+
+Refs:
+- architecture-and-conventions.md
+- prisma/schema.prisma
+- @/generated (Prisma)
