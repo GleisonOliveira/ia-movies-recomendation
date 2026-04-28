@@ -89,7 +89,9 @@ describe('UserController', () => {
       user: response,
     });
 
-    await expect(controller.addMovieToUser(dto, res as never)).resolves.toBe(response);
+    await expect(controller.addMovieToUser(dto, res as never)).resolves.toBe(
+      response,
+    );
     expect(userService.addMovieToUser).toHaveBeenCalledWith(dto);
     expect(res.status).toHaveBeenCalledWith(201);
   });
@@ -111,7 +113,9 @@ describe('UserController', () => {
       user: response,
     });
 
-    await expect(controller.addMovieToUser(dto, res as never)).resolves.toBe(response);
+    await expect(controller.addMovieToUser(dto, res as never)).resolves.toBe(
+      response,
+    );
     expect(res.status).toHaveBeenCalledWith(204);
   });
 

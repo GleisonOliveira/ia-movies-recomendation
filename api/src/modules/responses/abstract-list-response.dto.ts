@@ -3,7 +3,7 @@ import { Expose, Transform, TransformFnParams } from 'class-transformer';
 
 export abstract class AbstractListResponseDto<T> {
   @Expose()
-  data: T[];
+  data: T[] = [];
 
   @Expose()
   @Transform((value: TransformFnParams) => {
@@ -25,5 +25,12 @@ export abstract class AbstractListResponseDto<T> {
     per_page: number;
     prev: number | null;
     next: number | null;
+  } = {
+    total: 0,
+    last_page: 0,
+    current_page: 0,
+    per_page: 0,
+    prev: 0,
+    next: 0,
   };
 }

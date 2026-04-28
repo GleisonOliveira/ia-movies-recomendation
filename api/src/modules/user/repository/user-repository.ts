@@ -3,7 +3,7 @@ import { createPaginator } from 'prisma-pagination';
 import { ListUserDto } from '../dto/list.user.dto';
 import { ListUserMoviesDto } from '../dto/list-user-movies.dto';
 import { PrismaService } from '../../prisma/prisma-service/prisma-service';
-import { Prisma, User, UserMovie } from '@/generatedprisma/client';
+import { UserMovie, Prisma } from '@/generatedprisma/client';
 
 @Injectable()
 export class UserRepository {
@@ -12,7 +12,14 @@ export class UserRepository {
   async getAll({ per_page, page, name }: ListUserDto) {
     const paginate = createPaginator({ perPage: per_page });
 
-    const users = await paginate<User, Prisma.UserFindManyArgs>(
+    const users = await paginate<
+      Prisma.UserGetPayload<{
+        include: {
+          movies: { include: { movie: true } };
+        };
+      }>,
+      Prisma.UserFindManyArgs
+    >(
       this.prismaService.user,
       {
         where: name
@@ -23,11 +30,32 @@ export class UserRepository {
               },
             }
           : undefined,
+        include: {
+          movies: {
+            take: 5,
+            orderBy: {
+              movie: {
+                release_date: 'desc',
+              },
+            },
+            include: {
+              movie: true,
+            },
+          },
+        },
       },
       { page },
     );
 
-    return users;
+    return {
+      ...users,
+      data: users.data.map((u) => ({
+        id: u.id,
+        name: u.name,
+        age: u.age,
+        latest_movies: (u.movies ?? []).map((um) => um.movie),
+      })),
+    };
   }
 
   async create(data: Prisma.UserCreateInput) {

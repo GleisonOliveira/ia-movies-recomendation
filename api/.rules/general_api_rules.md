@@ -36,6 +36,7 @@ This document provides guidelines for AI agents working on the Movies Recommenda
 ### General rules
 - Always remove unused imports and code to maintain cleanliness.
 - Follow existing code patterns for consistency.
+- Not create unnecessary code comments
 
 ### Module Organization
 - Domain-driven structure: `user`, `movie`, `recomendation`, `connectors`, `command`, `prisma`.
