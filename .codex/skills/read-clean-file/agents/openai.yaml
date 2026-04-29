@@ -1,0 +1,3 @@
+interface:
+  display_name: "Read-clean-file"
+  short_description: "Read a source file in a token-efficient way by removing comments and unnecessary whitespace"
