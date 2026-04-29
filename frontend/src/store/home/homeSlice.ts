@@ -1,24 +1,26 @@
-import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { z } from 'zod';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Movie } from '@/services/movie/MovieService';
 import type { User } from '@/services/user/UserService';
 import type { PaginationMeta, UserMoviesState } from '@/ui/pages/home/types';
-import { createAppContainer } from '@/shared/di/createAppContainer';
+import {
+  addMovieToUser,
+  createUser,
+  loadUserMovies,
+  loadUsers,
+  removeMovieFromUser,
+  searchMovies,
+  submitCreateUserModal,
+} from '@/store/home/homeThunks';
 
-const container = createAppContainer();
-
-const USERS_PER_PAGE = 8;
-const MOVIES_PER_PAGE = 6;
-
-const createUserModalSchema = z.object({
-  name: z.string().trim().min(1, 'Informe o nome do usuário'),
-  age: z
-    .string()
-    .trim()
-    .min(1, 'Informe a idade do usuário')
-    .refine((value) => Number.isFinite(Number(value)), 'Informe uma idade válida')
-    .refine((value) => Number(value) > 0, 'A idade deve ser maior que zero'),
-});
+export {
+  addMovieToUser,
+  createUser,
+  loadUserMovies,
+  loadUsers,
+  removeMovieFromUser,
+  searchMovies,
+  submitCreateUserModal,
+};
 
 type CreateUserModalErrors = {
   name: string | null;
@@ -89,67 +91,6 @@ const initialState: HomeState = {
     selected: null,
   },
 };
-
-export const loadUsers = createAsyncThunk('home/loadUsers', async (page: number) => {
-  return container.userService.getAll({ page, per_page: USERS_PER_PAGE });
-});
-
-export const createUser = createAsyncThunk(
-  'home/createUser',
-  async (payload: { name: string; age: number }, thunkApi) => {
-    const createdUser = await container.userService.create(payload);
-    const state = thunkApi.getState() as { home: HomeState };
-    await thunkApi.dispatch(loadUsers(state.home.userState.page));
-    return createdUser;
-  },
-);
-
-export const submitCreateUserModal = createAsyncThunk(
-  'home/submitCreateUserModal',
-  async (_, thunkApi) => {
-    const state = thunkApi.getState() as { home: HomeState };
-    const { name, age } = state.home.createUserModal;
-    const parsed = createUserModalSchema.safeParse({ name, age });
-
-    if (!parsed.success) {
-      return thunkApi.rejectWithValue(
-        parsed.error.flatten().fieldErrors,
-      );
-    }
-
-    const result = await thunkApi.dispatch(createUser({
-      name: parsed.data.name.trim(),
-      age: Number(parsed.data.age),
-    }));
-    return result;
-  },
-  {
-    condition: (_, { getState }) => {
-      const state = getState() as { home: HomeState };
-      return !state.home.createUserModal.submitting;
-    },
-  },
-);
-
-export const loadUserMovies = createAsyncThunk('home/loadUserMovies', async (args: { userId: number; page: number }) => {
-  return container.userService.getMoviesByUserId({
-    user_id: args.userId,
-    page: args.page,
-    per_page: MOVIES_PER_PAGE,
-  });
-});
-
-export const searchMovies = createAsyncThunk('home/searchMovies', async (query: string) => {
-  return container.movieService.getAll({ name: query, page: 1, per_page: 10 });
-});
-
-export const addMovieToUser = createAsyncThunk('home/addMovieToUser', async (args: { userId: number; movieId: number }) => {
-  return container.userService.addMovieToUser({ user_id: args.userId, movie_id: args.movieId });
-});
-
-export const removeMovieFromUser = createAsyncThunk('home/removeMovieFromUser', async (args: { userId: number; movieId: number }) => {
-  return container.userService.removeMovieFromUser({ user_id: args.userId, movie_id: args.movieId });
-});
 
 const homeSlice = createSlice({
   name: 'home',
@@ -292,6 +233,24 @@ const homeSlice = createSlice({
         };
       })
       .addCase(addMovieToUser.fulfilled, (state, action) => {
+        const payloadUser = action.payload?.user;
+        const payloadMovie = action.payload?.movie;
+        if (payloadUser && payloadMovie) {
+          const insert = (movies: typeof payloadUser.latest_movies) => {
+            const next = (movies ?? []).filter((m) => m.id !== payloadMovie.id);
+            return [payloadMovie, ...next].slice(0, 5);
+          };
+
+          // Lista principal usa `userState.data`
+          state.userState.data = state.userState.data.map((u) =>
+            u.id === payloadUser.id
+              ? {
+                  ...u,
+                  latest_movies: insert(u.latest_movies),
+                }
+              : u,
+          );
+        }
         state.toast = {
           open: true,
           message: action.payload ? 'Filme associado ao usuário' : 'Filme já estava associado ao usuário',
@@ -304,6 +263,21 @@ const homeSlice = createSlice({
           message: 'Erro ao remover filme do usuário',
           severity: 'error',
         };
+      })
+      .addCase(removeMovieFromUser.fulfilled, (state, action) => {
+        const args = action.meta.arg as { userId: number; movieId: number };
+        const { userId, movieId } = args ?? { userId: -1, movieId: -1 };
+
+        state.userState.data = state.userState.data.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                latest_movies: (u.latest_movies ?? []).filter(
+                  (m) => m.id !== movieId,
+                ),
+              }
+            : u,
+        );
       });
   },
 });

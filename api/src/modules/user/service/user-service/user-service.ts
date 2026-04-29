@@ -18,7 +18,16 @@ export class UserService {
   async getAll(params: ListUserDto): Promise<ListUserResponseDto> {
     const data = await this.userRepository.getAll(params);
 
-    return plainToInstance(ListUserResponseDto, data);
+    return plainToInstance(ListUserResponseDto, {
+      ...data,
+      data: data.data.map((user) => ({
+        ...user,
+        latest_movies: user.latest_movies.map((movie) => ({
+          ...movie,
+          vote_average: decimalToNumber(movie.vote_average),
+        })),
+      })),
+    });
   }
 
   async create(data: UserCreateDto): Promise<UserResponseDto> {

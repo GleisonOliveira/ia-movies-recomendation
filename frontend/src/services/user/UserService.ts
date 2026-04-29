@@ -32,7 +32,6 @@ export class UserService {
   }
 
   async removeMovieFromUser(payload: { user_id: number; movie_id: number }) {
-    const { data } = await this.httpClient.delete('/user/movie', { data: payload });
-    return userSchema.parse(data);
+    await this.httpClient.delete('/user/movie', { data: payload });
   }
 }

@@ -1,13 +1,10 @@
 import { createHttpClient } from '@/services/http/httpClient';
 import { MovieService } from '@/services/movie/MovieService';
 import { UserService } from '@/services/user/UserService';
+import { env } from '@/config/env';
 
 export function createAppContainer() {
-  const apiUrl =
-    typeof window !== 'undefined'
-      ? window.location.origin.replace(/:\d+$/, ':3000')
-      : 'http://localhost:3000';
-  const httpClient = createHttpClient(apiUrl);
+  const httpClient = createHttpClient(env.API_URL);
 
   return {
     movieService: new MovieService(httpClient),

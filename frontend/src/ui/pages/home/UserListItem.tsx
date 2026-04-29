@@ -1,5 +1,7 @@
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import type { User } from '@/services/user/UserService';
+import type { Movie } from '@/services/movie/MovieService';
+import { MovieMiniCard } from './MovieMiniCard';
 
 type Props = {
   user: User;
@@ -36,6 +38,40 @@ export function UserListItem({ user, onClick }: Props) {
         </Box>
         <Chip label={`${user.age} anos`} color="primary" variant="outlined" />
       </Stack>
+        <Stack spacing={1.25} sx={{ mt: 2 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+            Últimos filmes
+          </Typography>
+          <Box
+            sx={{
+              pl: 1,
+              display: { xs: 'flex', lg: 'grid' },
+              gridTemplateColumns: { lg: 'repeat(5, minmax(0, 1fr))' },
+              gap: { xs: 1, lg: 1 },
+              flexWrap: { xs: 'wrap', lg: 'nowrap' },
+              alignItems: 'stretch',
+            }}
+          >
+            {(user.latest_movies ?? []).map((movie: Movie) => (
+              <MovieMiniCard key={movie.id} movie={movie} />
+            ))}
+            {(!user.latest_movies || user.latest_movies.length === 0) && (
+              <Box
+                sx={{
+                  color: 'text.secondary',
+                  display: 'grid',
+                  placeItems: 'center',
+                  borderRadius: 2,
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                  p: 1,
+                }}
+              >
+                <Typography variant="body2">Sem filmes</Typography>
+              </Box>
+            )}
+          </Box>
+        </Stack>
     </Paper>
   );
 }

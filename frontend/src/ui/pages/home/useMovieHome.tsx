@@ -41,7 +41,7 @@ export function useMovieHome() {
       setSelectedMovieOption: (movie: Movie | null) => dispatch(setSelectedMovie(movie)),
       addMovieToUser: async (movie: Movie | null) => {
         if (!selectedUser || !movie) return;
-        await dispatch(addMovieToUserThunk({ userId: selectedUser.id, movieId: movie.id }));
+        await dispatch(addMovieToUserThunk({ userId: selectedUser.id, movie }));
         dispatch(setMovieQuery(''));
         dispatch(setSelectedMovie(null));
         void dispatch(loadUserMovies({ userId: selectedUser.id, page: movieState.userMoviesPage }));

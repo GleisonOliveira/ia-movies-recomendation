@@ -1,6 +1,7 @@
 import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import type { MovieCardProps } from './types';
 import { MissingPosterIcon, RemoveIcon } from './icons';
+import { env } from '@/config/env';
 
 export function MovieCard({ movie, onRemove }: MovieCardProps) {
   const releaseDate = new Date(movie.release_date);
@@ -13,14 +14,14 @@ export function MovieCard({ movie, onRemove }: MovieCardProps) {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: '72px 1fr',
+              gridTemplateColumns: '84px 1fr',
               gap: 1.5,
               alignItems: 'start',
             }}
           >
             <Box
               sx={{
-                width: 72,
+                width: 84,
                 height: 108,
                 borderRadius: 2,
                 overflow: 'hidden',
@@ -31,7 +32,7 @@ export function MovieCard({ movie, onRemove }: MovieCardProps) {
               {movie.poster_path ? (
                 <Box
                   component="img"
-                  src={movie.poster_path}
+                  src={`${env.TMDB_IMAGE_PATH}${movie.poster_path}`}
                   alt={movie.title}
                   sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />

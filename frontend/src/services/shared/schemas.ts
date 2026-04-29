@@ -27,6 +27,7 @@ export const userSchema = z.object({
   id: z.number(),
   name: z.string(),
   age: z.number(),
+  latest_movies: z.array(movieSchema).optional(),
 });
 
 export const listResponseSchema = <T extends z.ZodTypeAny>(item: T) =>
