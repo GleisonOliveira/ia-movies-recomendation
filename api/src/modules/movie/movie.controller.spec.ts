@@ -1,25 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MovieController } from './movie.controller';
 import { MovieService } from './service/movie-service/movie-service';
+import { MovieRepository } from './repository/movie-repository/movie-repository';
 import { ListMoviesDto } from './dto/list.movies.dto';
-import { ListMoviesResponseDto } from './dto/list.movies.response.dto';
-import { MovieResponseDto } from './dto/movie.response.dto';
+import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
+import { buildMovie } from '../../../test/movie/movie-test-utils';
+import { Prisma } from '@/generatedprisma/client';
+import type { Movie } from '@/generatedprisma/client';
+import type {
+  MovieFindManyResult,
+  MovieCountResult,
+} from '../../../test/movie/movie-repository-test-types';
 
 describe('MovieController', () => {
   let controller: MovieController;
-  const movieService = {
-    getAll: jest.fn(),
-    getById: jest.fn(),
-    createMovie: jest.fn(),
-    getLatestReleaseDate: jest.fn(),
-  };
+  const prismaService = {
+    movie: {
+      findMany: jest.fn<MovieFindManyResult, [Prisma.MovieFindManyArgs]>(),
+      count: jest.fn<MovieCountResult, [Prisma.MovieCountArgs]>(),
+    },
+  } as const;
 
   beforeEach(async () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MovieController],
-      providers: [{ provide: MovieService, useValue: movieService }],
+      providers: [
+        MovieService,
+        MovieRepository,
+        { provide: PrismaService, useValue: prismaService },
+      ],
     }).compile();
 
     controller = module.get<MovieController>(MovieController);
@@ -35,24 +46,29 @@ describe('MovieController', () => {
     params.per_page = 10;
     params.name = 'Movie';
 
-    const movie = new MovieResponseDto();
-    movie.id = 1;
-    movie.title = 'Movie A';
-    movie.vote_average = 8.5;
+    const prismaMovie: Movie = buildMovie({
+      title: 'Movie A',
+      vote_average: new Prisma.Decimal(8.5),
+      id: 1,
+    });
 
-    const response = new ListMoviesResponseDto();
-    response.data = [movie as unknown as ListMoviesResponseDto['data'][number]];
-    response.meta = {
-      total: 1,
-      last_page: 1,
-      current_page: 1,
-      per_page: 10,
-      prev: null,
-      next: null,
-    };
-    movieService.getAll.mockResolvedValue(response);
+    prismaService.movie.count.mockResolvedValue(1);
+    prismaService.movie.findMany.mockResolvedValue([prismaMovie]);
 
-    await expect(controller.getAll(params)).resolves.toBe(response);
-    expect(movieService.getAll).toHaveBeenCalledWith(params);
+    await expect(controller.getAll(params)).resolves.toMatchObject({
+      data: [
+        expect.objectContaining({
+          id: 1,
+          title: 'Movie A',
+          vote_average: 8.5,
+        }),
+      ],
+      meta: {
+        total: 1,
+        last_page: 1,
+        current_page: 1,
+        per_page: 10,
+      },
+    });
   });
 });

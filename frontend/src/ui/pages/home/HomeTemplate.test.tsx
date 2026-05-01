@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { HomeTemplate } from './HomeTemplate';
-import type { User } from '@/services/user/UserService';
+import type { User } from '@/services/user/user-service';
 
 const user: User = { id: 1, name: 'Ana', age: 28 };
 

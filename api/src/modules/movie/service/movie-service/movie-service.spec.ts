@@ -4,16 +4,29 @@ import { MovieRepository } from '../../repository/movie-repository/movie-reposit
 import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
 import { MovieCreateDto } from '../../dto/movie.create.dto';
 import { ListMoviesDto } from '../../dto/list.movies.dto';
+import type {
+  MovieCountResult,
+  MovieCreateResult,
+  MovieFindFirstArgs,
+  MovieFindFirstResult,
+  MovieFindManyArgs,
+  MovieFindManyResult,
+  MovieFindUniqueArgs,
+  MovieFindUniqueResult,
+} from '../../../../../test/movie/movie-repository-test-types';
+import { buildMovie } from '../../../../../test/movie/movie-test-utils';
+import { buildUser } from '../../../../../test/user/user-test-utils';
+import { Prisma } from '@/generatedprisma/client';
 
 describe('MovieService', () => {
   let service: MovieService;
   const prismaService = {
     movie: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      findFirst: jest.fn(),
-      count: jest.fn(),
+      findMany: jest.fn<MovieFindManyResult, [MovieFindManyArgs]>(),
+      findUnique: jest.fn<MovieFindUniqueResult, [MovieFindUniqueArgs]>(),
+      create: jest.fn<MovieCreateResult, [Prisma.MovieCreateArgs]>(),
+      findFirst: jest.fn<MovieFindFirstResult, [MovieFindFirstArgs]>(),
+      count: jest.fn<MovieCountResult, [Prisma.MovieCountArgs]>(),
     },
   };
 
@@ -32,6 +45,8 @@ describe('MovieService', () => {
   });
 
   it('should be defined', () => {
+    const user = buildUser();
+    expect(user.id).toBe(1);
     expect(service).toBeDefined();
   });
 
@@ -43,20 +58,20 @@ describe('MovieService', () => {
 
     prismaService.movie.count.mockResolvedValue(1);
     prismaService.movie.findMany.mockResolvedValue([
-      {
+      buildMovie({
         id: 1,
         title: 'Movie A',
-        vote_average: { toNumber: () => 8.5 },
-      },
+        vote_average: new Prisma.Decimal(8.5),
+      }),
     ]);
 
-    await expect(service.getAll(params)).resolves.toEqual({
+    await expect(service.getAll(params)).resolves.toMatchObject({
       data: [
-        {
+        expect.objectContaining({
           id: 1,
           title: 'Movie A',
           vote_average: 8.5,
-        },
+        }),
       ],
       meta: {
         total: 1,
@@ -71,12 +86,14 @@ describe('MovieService', () => {
 
   it('should get a movie by id with plainToInstance', async () => {
     prismaService.movie.findUnique.mockResolvedValue({
-      id: 1,
-      title: 'Movie A',
-      vote_average: { toNumber: () => 7.2 },
+      ...buildMovie({
+        id: 1,
+        title: 'Movie A',
+        vote_average: new Prisma.Decimal(7.2),
+      }),
     });
 
-    await expect(service.getById(1)).resolves.toEqual({
+    await expect(service.getById(1)).resolves.toMatchObject({
       id: 1,
       title: 'Movie A',
       vote_average: 7.2,
@@ -98,12 +115,14 @@ describe('MovieService', () => {
     );
 
     prismaService.movie.create.mockResolvedValue({
-      id: 1,
-      title: 'Movie A',
-      vote_average: { toNumber: () => 7.8 },
+      ...buildMovie({
+        id: 1,
+        title: 'Movie A',
+        vote_average: new Prisma.Decimal(7.8),
+      }),
     });
 
-    await expect(service.createMovie(dto)).resolves.toEqual({
+    await expect(service.createMovie(dto)).resolves.toMatchObject({
       id: 1,
       title: 'Movie A',
       vote_average: 7.8,

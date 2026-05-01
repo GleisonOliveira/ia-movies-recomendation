@@ -6,7 +6,9 @@ import { ListUserDto } from '../../dto/list.user.dto';
 import { UserCreateDto } from '../../dto/user.create.dto';
 import { AddUserMovieDto } from '../../dto/add-user-movie.dto';
 import { ListUserMoviesDto } from '../../dto/list-user-movies.dto';
-import { type Movie, type User, Prisma } from '@/generatedprisma/client';
+import { Prisma } from '@/generatedprisma/client';
+import { buildMovie } from '../../../../../test/movie/movie-test-utils';
+import { buildUser } from '../../../../../test/user/user-test-utils';
 import {
   type MovieFindManyResult,
   type MovieFindUniqueResult,
@@ -19,34 +21,10 @@ import {
   type UserMovieDeleteResult,
   type UserMovieFindManyResult,
   type UserMovieFindUniqueResult,
-} from '../../../../../test/user/user-test-types';
+} from '../../../../../test/user/user-repository-test-types';
 
 describe('UserService', () => {
   let service: UserService;
-  const releaseDate = new Date('2020-01-01T00:00:00.000Z');
-  const vote = new Prisma.Decimal(8.1);
-
-  const buildMovie = (overrides: Partial<Movie> = {}): Movie => ({
-    id: 2,
-    title: 'Movie 1',
-    external_id: 1,
-    original_language: 'en',
-    overview: 'Overview',
-    popularity: 1,
-    poster_path: null,
-    adult: false,
-    release_date: releaseDate,
-    vote_average: vote,
-    vote_count: 1,
-    ...overrides,
-  });
-
-  const buildUser = (overrides: Partial<User> = {}): User => ({
-    id: 1,
-    name: 'John',
-    age: 30,
-    ...overrides,
-  });
 
   const prismaService = {
     user: {
@@ -126,7 +104,7 @@ describe('UserService', () => {
     const movie = buildMovie({
       id: 2,
       title: 'Movie 1',
-      vote_average: vote.toNumber() as unknown as Prisma.Decimal,
+      vote_average: new Prisma.Decimal(8.1),
     });
     prismaService.user.count.mockResolvedValue(1);
     prismaService.user.findMany.mockResolvedValue([
@@ -222,7 +200,11 @@ describe('UserService', () => {
     ]);
     prismaService.movie.findMany.mockResolvedValue([
       {
-        ...buildMovie({ id: 1, title: 'Movie A', vote_average: vote }),
+        ...buildMovie({
+          id: 1,
+          title: 'Movie A',
+          vote_average: new Prisma.Decimal(8.1),
+        }),
       },
     ]);
 

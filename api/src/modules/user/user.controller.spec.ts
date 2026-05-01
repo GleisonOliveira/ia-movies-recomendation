@@ -1,38 +1,74 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from './service/user-service/user-service';
+import { UserRepository } from './repository/user-repository';
+import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
 import { ListUserDto } from './dto/list.user.dto';
 import { UserCreateDto } from './dto/user.create.dto';
 import { AddUserMovieDto } from './dto/add-user-movie.dto';
 import { ListUserMoviesDto } from './dto/list-user-movies.dto';
-import { ListUserResponseDto } from './dto/list.user.response.dto';
 import { UserResponseDto } from './dto/user.response.dto';
-import { ListMoviesResponseDto } from '../movie/dto/list.movies.response.dto';
-import { MovieResponseDto } from '../movie/dto/movie.response.dto';
+import { Prisma } from '@/generatedprisma/client';
+import { buildMovie } from '../../../test/movie/movie-test-utils';
+import { buildUser } from '../../../test/user/user-test-utils';
+import type {
+  MovieFindManyResult,
+  MovieFindUniqueResult,
+  UserCountResult,
+  UserCreateResult,
+  UserFindManyResult,
+  UserFindUniqueResult,
+  UserMovieCountResult,
+  UserMovieCreateResult,
+  UserMovieDeleteResult,
+  UserMovieFindManyResult,
+  UserMovieFindUniqueResult,
+} from '../../../test/user/user-repository-test-types';
 
 describe('UserController', () => {
   let controller: UserController;
-  const userService = {
-    getAll: jest.fn(),
-    create: jest.fn(),
-    addMovieToUser: jest.fn(),
-    removeMovieFromUser: jest.fn(),
-    getMoviesByUserId: jest.fn(),
-  };
+  const prismaService = {
+    user: {
+      findMany: jest.fn<UserFindManyResult, [Prisma.UserFindManyArgs]>(),
+      findUnique: jest.fn<UserFindUniqueResult, [Prisma.UserFindUniqueArgs]>(),
+      create: jest.fn<UserCreateResult, [Prisma.UserCreateArgs]>(),
+      count: jest.fn<UserCountResult, [Prisma.UserCountArgs]>(),
+    },
+    userMovie: {
+      findUnique: jest.fn<
+        UserMovieFindUniqueResult,
+        [Prisma.UserMovieFindUniqueArgs]
+      >(),
+      create: jest.fn<UserMovieCreateResult, [Prisma.UserMovieCreateArgs]>(),
+      delete: jest.fn<UserMovieDeleteResult, [Prisma.UserMovieDeleteArgs]>(),
+      findMany: jest.fn<
+        UserMovieFindManyResult,
+        [Prisma.UserMovieFindManyArgs]
+      >(),
+      count: jest.fn<UserMovieCountResult, [Prisma.UserMovieCountArgs]>(),
+    },
+    movie: {
+      findUnique: jest.fn<
+        MovieFindUniqueResult,
+        [Prisma.MovieFindUniqueArgs]
+      >(),
+      findMany: jest.fn<MovieFindManyResult, [Prisma.MovieFindManyArgs]>(),
+    },
+  } as const;
 
   beforeEach(async () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
-      providers: [{ provide: UserService, useValue: userService }],
+      providers: [
+        UserService,
+        UserRepository,
+        { provide: PrismaService, useValue: prismaService },
+      ],
     }).compile();
 
     controller = module.get<UserController>(UserController);
-  });
-
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
   });
 
   it('should pass list params to user service', async () => {
@@ -41,20 +77,44 @@ describe('UserController', () => {
     params.per_page = 10;
     params.name = 'John';
 
-    const response = new ListUserResponseDto();
-    response.data = [];
-    response.meta = {
-      total: 0,
-      last_page: 0,
-      current_page: 1,
-      per_page: 10,
-      prev: null,
-      next: null,
-    };
-    userService.getAll.mockResolvedValue(response);
+    prismaService.user.count.mockResolvedValue(1);
+    prismaService.user.findMany.mockResolvedValue([
+      {
+        ...buildUser(),
+        movies: [
+          {
+            user_id: 1,
+            movie_id: 2,
+            movie: {
+              ...buildMovie({
+                title: 'Movie A',
+                vote_average: new Prisma.Decimal(8.4),
+              }),
+            },
+          },
+        ],
+      },
+    ]);
 
-    await expect(controller.getAll(params)).resolves.toBe(response);
-    expect(userService.getAll).toHaveBeenCalledWith(params);
+    const result = await controller.getAll(params);
+    expect(result).toMatchObject({
+      data: [
+        expect.objectContaining({
+          ...buildUser(),
+          latest_movies: [
+            expect.objectContaining({ id: 2, vote_average: 8.4 }),
+          ],
+        }),
+      ],
+    });
+    expect(result.meta).toEqual(
+      expect.objectContaining({
+        total: 1,
+        last_page: 1,
+        current_page: 1,
+        per_page: 10,
+      }),
+    );
   });
 
   it('should pass create dto to user service', async () => {
@@ -62,37 +122,50 @@ describe('UserController', () => {
     dto.name = 'John';
     dto.age = 30;
 
-    const response = new UserResponseDto();
-    response.id = 1;
-    response.name = 'John';
-    response.age = 30;
-    userService.create.mockResolvedValue(response);
+    prismaService.user.create.mockResolvedValue(buildUser());
 
-    await expect(controller.create(dto)).resolves.toBe(response);
-    expect(userService.create).toHaveBeenCalledWith(dto);
+    await expect(controller.create(dto)).resolves.toMatchObject({
+      id: 1,
+      name: 'John',
+      age: 30,
+    } satisfies UserResponseDto);
   });
 
   it('should pass add movie dto to user service', async () => {
     const dto = new AddUserMovieDto();
     dto.user_id = 1;
     dto.movie_id = 2;
+
+    const user = buildUser();
+
+    prismaService.user.findUnique
+      .mockResolvedValueOnce(user) // ensureUserExists
+      .mockResolvedValueOnce(user); // getUserById
+
+    prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
+    prismaService.userMovie.findUnique.mockResolvedValue(null);
+
+    prismaService.userMovie.create.mockResolvedValue({
+      user_id: 1,
+      movie_id: 2,
+      user: buildUser(),
+      movie: buildMovie({
+        title: 'Movie A',
+        vote_average: new Prisma.Decimal(8.4),
+      }),
+    });
+
     const res = {
       status: jest.fn().mockReturnThis(),
     };
 
-    const response = new UserResponseDto();
-    response.id = 1;
-    response.name = 'John';
-    response.age = 30;
-    userService.addMovieToUser.mockResolvedValue({
-      alreadyLinked: false,
-      user: response,
+    await expect(
+      controller.addMovieToUser(dto, res as never),
+    ).resolves.toMatchObject({
+      id: 1,
+      name: 'John',
+      age: 30,
     });
-
-    await expect(controller.addMovieToUser(dto, res as never)).resolves.toBe(
-      response,
-    );
-    expect(userService.addMovieToUser).toHaveBeenCalledWith(dto);
     expect(res.status).toHaveBeenCalledWith(201);
   });
 
@@ -100,22 +173,36 @@ describe('UserController', () => {
     const dto = new AddUserMovieDto();
     dto.user_id = 1;
     dto.movie_id = 2;
+
+    prismaService.user.findUnique.mockImplementation(
+      (args: Prisma.UserFindUniqueArgs) => {
+        const user = buildUser();
+
+        if (args.select?.id) {
+          return Promise.resolve(user);
+        }
+
+        return Promise.resolve(user);
+      },
+    );
+
+    prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
+    prismaService.userMovie.findUnique.mockResolvedValue({
+      user_id: 1,
+      movie_id: 2,
+    });
+
     const res = {
       status: jest.fn().mockReturnThis(),
     };
 
-    const response = new UserResponseDto();
-    response.id = 1;
-    response.name = 'John';
-    response.age = 30;
-    userService.addMovieToUser.mockResolvedValue({
-      alreadyLinked: true,
-      user: response,
+    await expect(
+      controller.addMovieToUser(dto, res as never),
+    ).resolves.toMatchObject({
+      id: 1,
+      name: 'John',
+      age: 30,
     });
-
-    await expect(controller.addMovieToUser(dto, res as never)).resolves.toBe(
-      response,
-    );
     expect(res.status).toHaveBeenCalledWith(204);
   });
 
@@ -124,40 +211,56 @@ describe('UserController', () => {
     dto.user_id = 1;
     dto.movie_id = 2;
 
-    const response = new UserResponseDto();
-    response.id = 1;
-    response.name = 'John';
-    response.age = 30;
-    userService.removeMovieFromUser.mockResolvedValue(response);
+    prismaService.user.findUnique
+      .mockResolvedValueOnce(buildUser()) // ensureUserExists
+      .mockResolvedValueOnce(buildUser()); // getUserById not used here, but keep calls stable
 
-    await expect(controller.removeMovieFromUser(dto)).resolves.toBe(response);
-    expect(userService.removeMovieFromUser).toHaveBeenCalledWith(dto);
+    prismaService.movie.findUnique.mockResolvedValue({ id: 2 });
+    prismaService.userMovie.delete.mockResolvedValue({
+      user_id: 1,
+      movie_id: 2,
+      ...buildUser(),
+    });
+
+    await expect(controller.removeMovieFromUser(dto)).resolves.toMatchObject({
+      id: 1,
+      name: 'John',
+      age: 30,
+    });
   });
 
   it('should pass user movies query to user service', async () => {
+    const movie = buildMovie({
+      title: 'Movie A',
+      vote_average: new Prisma.Decimal(8.4),
+    });
     const params = new ListUserMoviesDto();
     params.user_id = 1;
     params.page = 1;
     params.per_page = 10;
 
-    const movie = new MovieResponseDto();
-    movie.id = 1;
-    movie.title = 'Movie A';
-    movie.vote_average = 8.4;
+    prismaService.userMovie.count.mockResolvedValue(1);
+    prismaService.userMovie.findMany.mockResolvedValue([
+      { movie_id: 2, user_id: 1 },
+    ]);
 
-    const response = new ListMoviesResponseDto();
-    response.data = [movie as unknown as ListMoviesResponseDto['data'][number]];
-    response.meta = {
-      total: 1,
-      last_page: 1,
-      current_page: 1,
-      per_page: 10,
-      prev: null,
-      next: null,
-    };
-    userService.getMoviesByUserId.mockResolvedValue(response);
+    prismaService.movie.findMany.mockResolvedValue([
+      {
+        ...movie,
+      },
+    ]);
 
-    await expect(controller.getMoviesByUserId(params)).resolves.toBe(response);
-    expect(userService.getMoviesByUserId).toHaveBeenCalledWith(params);
+    const result = await controller.getMoviesByUserId(params);
+    expect(result).toMatchObject({
+      data: [{ ...movie, vote_average: Number(8.4) }],
+    });
+    expect(result.meta).toEqual(
+      expect.objectContaining({
+        total: 1,
+        last_page: 1,
+        current_page: 1,
+        per_page: 10,
+      }),
+    );
   });
 });

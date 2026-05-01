@@ -1,5 +1,5 @@
 import type { Movie } from '@/services/movie/MovieService';
-import type { User } from '@/services/user/UserService';
+import type { User } from '@/services/user/user-service';
 
 export type PaginationMeta = {
   total: number;

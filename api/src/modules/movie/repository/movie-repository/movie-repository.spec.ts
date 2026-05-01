@@ -3,16 +3,27 @@ import { MovieRepository } from './movie-repository';
 import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
 import { ListMoviesDto } from '../../dto/list.movies.dto';
 import { Prisma } from '@/generatedprisma/client';
+import type {
+  MovieCountResult,
+  MovieCreateResult,
+  MovieFindFirstArgs,
+  MovieFindFirstResult,
+  MovieFindManyArgs,
+  MovieFindManyResult,
+  MovieFindUniqueArgs,
+  MovieFindUniqueResult,
+} from '../../../../../test/movie/movie-repository-test-types';
+import { buildMovie } from '../../../../../test/movie/movie-test-utils';
 
 describe('MovieRepository', () => {
   let repository: MovieRepository;
   const prismaService = {
     movie: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      findFirst: jest.fn(),
-      count: jest.fn(),
+      findMany: jest.fn<MovieFindManyResult, [MovieFindManyArgs]>(),
+      findUnique: jest.fn<MovieFindUniqueResult, [MovieFindUniqueArgs]>(),
+      create: jest.fn<MovieCreateResult, [Prisma.MovieCreateArgs]>(),
+      findFirst: jest.fn<MovieFindFirstResult, [MovieFindFirstArgs]>(),
+      count: jest.fn<MovieCountResult, [Prisma.MovieCountArgs]>(),
     },
   };
 
@@ -35,13 +46,13 @@ describe('MovieRepository', () => {
     params.per_page = 10;
     params.name = 'A';
 
-    prismaService.movie.count.mockResolvedValue(1);
-    prismaService.movie.findMany.mockResolvedValue([
-      { id: 1, title: 'A movie' },
-    ]);
+    const movieA = buildMovie({ id: 1, title: 'A movie' });
 
-    await expect(repository.getAll(params)).resolves.toEqual({
-      data: [{ id: 1, title: 'A movie' }],
+    prismaService.movie.count.mockResolvedValue(1);
+    prismaService.movie.findMany.mockResolvedValue([movieA]);
+
+    await expect(repository.getAll(params)).resolves.toMatchObject({
+      data: [expect.objectContaining({ id: 1, title: 'A movie' })],
       meta: {
         total: 1,
         lastPage: 1,
@@ -54,9 +65,10 @@ describe('MovieRepository', () => {
   });
 
   it('should find a movie by id', async () => {
-    prismaService.movie.findUnique.mockResolvedValue({ id: 1, title: 'A' });
+    const movieA = buildMovie({ id: 1, title: 'A' });
+    prismaService.movie.findUnique.mockResolvedValue(movieA);
 
-    await expect(repository.findById(1)).resolves.toEqual({
+    await expect(repository.findById(1)).resolves.toMatchObject({
       id: 1,
       title: 'A',
     });
@@ -67,7 +79,8 @@ describe('MovieRepository', () => {
   });
 
   it('should create a movie', async () => {
-    prismaService.movie.create.mockResolvedValue({ id: 1, title: 'A' });
+    const createdMovie = buildMovie({ id: 1, title: 'A' });
+    prismaService.movie.create.mockResolvedValue(createdMovie);
 
     const data: Prisma.MovieCreateInput = {
       title: 'A',
@@ -82,7 +95,7 @@ describe('MovieRepository', () => {
       vote_count: 10,
     };
 
-    await expect(repository.create(data)).resolves.toEqual({
+    await expect(repository.create(data)).resolves.toMatchObject({
       id: 1,
       title: 'A',
     });
@@ -93,12 +106,13 @@ describe('MovieRepository', () => {
   });
 
   it('should find latest release date', async () => {
+    const latestRelease = new Date('2024-01-01');
     prismaService.movie.findFirst.mockResolvedValue({
-      release_date: new Date('2024-01-01'),
+      release_date: latestRelease,
     });
 
     await expect(repository.findLatestReleaseDate()).resolves.toEqual(
-      new Date('2024-01-01'),
+      latestRelease,
     );
 
     expect(prismaService.movie.findFirst).toHaveBeenCalledWith({

@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Movie } from '@/services/movie/MovieService';
-import type { User } from '@/services/user/UserService';
+import type { User } from '@/services/user/user-service';
 import type { PaginationMeta, UserMoviesState } from '@/ui/pages/home/types';
 import {
   addMovieToUser,

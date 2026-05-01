@@ -1,6 +1,6 @@
 import { createHttpClient } from '@/services/http/httpClient';
 import { MovieService } from '@/services/movie/MovieService';
-import { UserService } from '@/services/user/UserService';
+import { UserService } from '@/services/user/user-service';
 import { env } from '@/config/env';
 
 export function createAppContainer() {

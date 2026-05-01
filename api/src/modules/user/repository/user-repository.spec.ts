@@ -4,8 +4,10 @@ import { PrismaService } from '../../prisma/prisma-service/prisma-service';
 import { UserRepository } from './user-repository';
 import { ListUserDto } from '../dto/list.user.dto';
 import { ListUserMoviesDto } from '../dto/list-user-movies.dto';
-import { type User, type Movie } from '@/generatedprisma/client';
+import { type Movie } from '@/generatedprisma/client';
 import { Prisma } from '@/generatedprisma/client';
+import { buildMovie } from '../../../../test/movie/movie-test-utils';
+import { buildUser } from '../../../../test/user/user-test-utils';
 import {
   type UserCreateResult,
   type UserCountResult,
@@ -18,36 +20,12 @@ import {
   type UserMovieFindUniqueResult,
   type MovieFindManyResult,
   type MovieFindUniqueResult,
-} from '../../../../test/user/user-test-types';
+} from '../../../../test/user/user-repository-test-types';
 
 // types are centralized in `api/test/user/user-test-types`
 
 describe('UserRepository', () => {
   let repository: UserRepository;
-  const releaseDate = new Date('2020-01-01T00:00:00.000Z');
-  const vote = new Prisma.Decimal(8.1);
-
-  const buildMovie = (overrides: Partial<Movie> = {}): Movie => ({
-    id: 2,
-    title: 'Movie 1',
-    external_id: 1,
-    original_language: 'en',
-    overview: 'Overview',
-    popularity: 1,
-    poster_path: null,
-    adult: false,
-    release_date: releaseDate,
-    vote_average: vote,
-    vote_count: 1,
-    ...overrides,
-  });
-
-  const buildUser = (overrides: Partial<User> = {}): User => ({
-    id: 1,
-    name: 'John',
-    age: 30,
-    ...overrides,
-  });
 
   const prismaService = {
     user: {

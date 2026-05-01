@@ -1,5 +1,5 @@
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
-import type { User } from '@/services/user/UserService';
+import type { User } from '@/services/user/user-service';
 import type { Movie } from '@/services/movie/MovieService';
 import { MovieMiniCard } from './MovieMiniCard';
 

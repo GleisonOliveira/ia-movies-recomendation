@@ -1,7 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { z } from 'zod';
 import type { Movie } from '@/services/movie/MovieService';
-import type { User } from '@/services/user/UserService';
+import type { User } from '@/services/user/user-service';
 import { createAppContainer } from '@/shared/di/createAppContainer';
 
 const container = createAppContainer();
