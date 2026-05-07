@@ -9,8 +9,8 @@ import { UserController } from './modules/user/user.controller';
 import { UserModule } from './modules/user/user.module';
 import { MovieModule } from './modules/movie/movie.module';
 import { NeuralComputerModule } from './modules/neural-computer/neural-computer.module';
-import { QdrantModule } from './modules/qdrant/qdrant.module';
 import { envSchema } from './config/env.schema';
+import { Neo4jModule } from './modules/neo4j/neo4j.module';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { envSchema } from './config/env.schema';
     UserModule,
     MovieModule,
     NeuralComputerModule,
-    QdrantModule,
+    Neo4jModule,
   ],
   controllers: [UserController],
 })

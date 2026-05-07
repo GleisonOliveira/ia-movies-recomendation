@@ -31,12 +31,15 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PORT=${POSTGRES_PORT}
-      - QDRANT_URL=http://qdrant:6333/readyz
-      - QDRANT_MAX_WAIT_SECONDS=60
+      - NEO4J_HOST=neo4j
+      - NEO4J_PORT=7687
+      - NEO4J_DATABASE=${NEO4J_DATABASE}
+      - NEO4J_USER=${NEO4J_USER}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
-      qdrant-ready:
+      neo4j-ready:
         condition: service_completed_successfully
   db:
     image: postgres:15
@@ -54,22 +57,28 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-  qdrant:
-    image: qdrant/qdrant:latest
+  neo4j:
+    image: neo4j:5
     ports:
-      - "6333:6333"
+      - "7474:7474"
+      - "7687:7687"
     environment:
-      - QDRANT__SERVICE__HOST=0.0.0.0
+      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
+      - NEO4J_dbms_default__database=${NEO4J_DATABASE}
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
     volumes:
-      - qdrant_storage:/qdrant/storage
+      - neo4j_data:/data
     restart: always
-  qdrant-ready:
+  neo4j-ready:
     image: curlimages/curl:8.10.1
     depends_on:
-      qdrant:
+      neo4j:
         condition: service_started
-    command: sh -c 'until curl -fsS http://qdrant:6333/readyz >/dev/null; do sleep 1; done'
+    environment:
+      - NEO4J_USER=${NEO4J_USER}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+    command: sh -c 'until (apk add --no-cache netcat-openbsd >/dev/null 2>&1 || true) && nc -z neo4j 7687 >/dev/null 2>&1; do sleep 1; done'
     restart: "no"
 volumes:
   pgdata:
-  qdrant_storage:
+  neo4j_data:

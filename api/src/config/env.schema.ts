@@ -13,8 +13,11 @@ export const envSchema = z.object({
   POSTGRES_PASSWORD: z.string().min(1),
   POSTGRES_DB: z.string().min(1),
   POSTGRES_PORT: portSchema.default(5432),
-  QDRANT_HOST: z.string().min(1).default('qdrant'),
-  QDRANT_PORT: portSchema.default(6333),
+  NEO4J_HOST: z.string().min(1).default('neo4j'),
+  NEO4J_PORT: portSchema.default(7687),
+  NEO4J_DATABASE: z.string().min(1).default('neo4j'),
+  NEO4J_USER: z.string().min(1),
+  NEO4J_PASSWORD: z.string().min(1),
 });
 
 export type EnvSchema = z.infer<typeof envSchema>;
