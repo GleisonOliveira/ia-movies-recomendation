@@ -1,10 +1,9 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { renderWithStore } from '@/test/testUtils';
-import type { Movie } from '@/services/movie/MovieService';
 import type { User } from '@/services/user/user-service';
 import { userReducer } from '@/store/users/usersSlice';
 import { UserDrawer } from './UserDrawer';
-import { buildMovie, buildUser } from '@/test/store/home/__fixtures__/homeThunksFixtures';
+import { buildUser } from '@/test/store/home/__fixtures__/homeThunksFixtures';
 import { buildHomePreloadedState } from '@/test/store/home/__fixtures__/homeComponentState';
 import { getAxiosMocks } from '@/test/utils/axiosMock';
 

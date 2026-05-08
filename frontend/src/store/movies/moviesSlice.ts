@@ -26,7 +26,7 @@ const moviesSlice = createSlice({
   name: 'movies',
   initialState: createInitialMoviesState(),
   reducers: {
-    resetMoviesState(state) {
+    resetMoviesState() {
       return createInitialMoviesState();
     },
     setMoviesPage(state, action: PayloadAction<number>) {
