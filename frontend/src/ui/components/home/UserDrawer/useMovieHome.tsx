@@ -10,7 +10,7 @@ import {
   setMovieQuery,
   setSelectedMovie,
   setUserMoviesPage,
-} from '@/store/home/homeSlice';
+} from '@/store/users/usersSlice';
 
 export function useMovieHome() {
   const dispatch = useAppDispatch();

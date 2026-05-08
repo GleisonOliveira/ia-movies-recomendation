@@ -60,44 +60,53 @@ export type HomeState = {
 
 export function createInitialHomeState(): HomeState {
   return {
-  selectedUser: null,
-  createUserModal: {
-    open: false,
-    name: '',
-    age: '',
-    submitting: false,
-    errors: {
-      name: null,
-      age: null,
+    selectedUser: null,
+    createUserModal: {
+      open: false,
+      name: '',
+      age: '',
+      submitting: false,
+      errors: {
+        name: null,
+        age: null,
+      },
     },
-  },
-  toast: {
-    open: false,
-    message: '',
-    severity: 'error',
-  },
-  userState: {
-    loading: true,
-    error: null,
-    data: [],
-    meta: null,
-    page: 1,
-  },
-  movieState: {
-    userMovies: { loading: false, error: null, data: [], meta: null },
-    userMoviesPage: 1,
-    query: '',
-    options: [],
-    loading: false,
-    selected: null,
-  },
+    toast: {
+      open: false,
+      message: '',
+      severity: 'error',
+    },
+    userState: {
+      loading: true,
+      error: null,
+      data: [],
+      meta: null,
+      page: 1,
+    },
+    movieState: {
+      userMovies: { loading: false, error: null, data: [], meta: null },
+      userMoviesPage: 1,
+      query: '',
+      options: [],
+      loading: false,
+      selected: null,
+    },
   };
 }
 
-const homeSlice = createSlice({
+const usersSlice = createSlice({
   name: 'home',
   initialState: createInitialHomeState(),
   reducers: {
+    resetHomeState() {
+      return createInitialHomeState();
+    },
+    setToast(
+      state,
+      action: PayloadAction<{ open: boolean; message: string; severity: 'error' | 'success' | 'info' | 'warning' }>,
+    ) {
+      state.toast = action.payload;
+    },
     setSelectedUser(state, action: PayloadAction<User | null>) {
       state.selectedUser = action.payload;
       state.movieState.userMoviesPage = 1;
@@ -247,9 +256,9 @@ const homeSlice = createSlice({
           state.userState.data = state.userState.data.map((u) =>
             u.id === payloadUser.id
               ? {
-                  ...u,
-                  latest_movies: insert(u.latest_movies),
-                }
+                ...u,
+                latest_movies: insert(u.latest_movies),
+              }
               : u,
           );
         }
@@ -273,20 +282,33 @@ const homeSlice = createSlice({
         state.userState.data = state.userState.data.map((u) =>
           u.id === userId
             ? {
-                ...u,
-                latest_movies: (u.latest_movies ?? []).filter(
-                  (m) => m.id !== movieId,
-                ),
-              }
+              ...u,
+              latest_movies: (u.latest_movies ?? []).filter(
+                (m) => m.id !== movieId,
+              ),
+            }
             : u,
         );
       });
   },
 });
 
-export const { setSelectedUser, closeDrawer, setUsersPage, setUserMoviesPage, setMovieQuery, setSelectedMovie } =
-  homeSlice.actions;
-export const { openCreateUserModal, closeCreateUserModal, setCreateUserName, setCreateUserAge } = homeSlice.actions;
-export const { closeToast } = homeSlice.actions;
+export const {
+  resetHomeState,
+  setSelectedUser,
+  closeDrawer,
+  setUsersPage,
+  setUserMoviesPage,
+  setMovieQuery,
+  setSelectedMovie,
+  setToast,
+} = usersSlice.actions;
+export const {
+  openCreateUserModal,
+  closeCreateUserModal,
+  setCreateUserName,
+  setCreateUserAge,
+} = usersSlice.actions;
+export const { closeToast } = usersSlice.actions;
 
-export const homeReducer = homeSlice.reducer;
+export const userReducer = usersSlice.reducer;

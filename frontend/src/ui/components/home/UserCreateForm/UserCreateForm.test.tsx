@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { UserCreateForm } from './UserCreateForm';
 import { renderWithStore } from '@/test/testUtils';
-import { homeReducer } from '@/store/home/homeSlice';
+import { userReducer } from '@/store/users/usersSlice';
 import { buildUser } from '@/test/store/home/__fixtures__/homeThunksFixtures';
 import { buildHomePreloadedState } from '@/test/store/home/__fixtures__/homeComponentState';
 import { getAxiosMocks } from '@/test/utils/axiosMock';
@@ -19,7 +19,7 @@ describe('UserCreateForm', () => {
     });
 
     renderWithStore(<UserCreateForm />, {
-      reducer: { home: homeReducer },
+      reducer: { home: userReducer },
       preloadedState: buildHomePreloadedState({ createUserModal: { open: true } }),
     });
 

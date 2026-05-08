@@ -1,5 +1,5 @@
-import type { HomeState } from '@/store/home/homeSlice';
-import { createInitialHomeState } from '@/store/home/homeSlice';
+import type { HomeState } from '@/store/users/usersSlice';
+import { createInitialHomeState } from '@/store/users/usersSlice';
 
 type PartialDeep<T> = {
   [K in keyof T]?: T[K] extends readonly unknown[]

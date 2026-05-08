@@ -1,10 +1,9 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HomeTemplate } from './HomeTemplate';
-import type { Movie } from '@/services/movie/MovieService';
 import type { User } from '@/services/user/user-service';
 import { renderWithStore } from '@/test/testUtils';
-import { homeReducer } from '@/store/home/homeSlice';
+import { userReducer } from '@/store/users/usersSlice';
 import { buildUser } from '@/test/store/home/__fixtures__/homeThunksFixtures';
 import { buildHomePreloadedState } from '@/test/store/home/__fixtures__/homeComponentState';
 import { getAxiosMocks } from '@/test/utils/axiosMock';
@@ -22,7 +21,7 @@ describe('HomeTemplate', () => {
     });
 
     renderWithStore(<HomeTemplate />, {
-      reducer: { home: homeReducer },
+      reducer: { home: userReducer },
       preloadedState: buildHomePreloadedState({
         userState: { loading: true },
       }),

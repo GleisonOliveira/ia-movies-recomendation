@@ -1,6 +1,6 @@
 import { CssBaseline, GlobalStyles, ThemeProvider, createTheme } from '@mui/material';
-import { AppContainer } from './layout/AppContainer';
 import { AppProviders } from './providers/AppProviders';
+import { AppRouterProvider } from './router/router';
 
 const theme = createTheme({
   palette: {
@@ -71,7 +71,7 @@ export function App() {
             body: { backgroundColor: 'var(--app-bg-0)' },
           }}
         />
-        <AppContainer />
+        <AppRouterProvider />
       </ThemeProvider>
     </AppProviders>
   );

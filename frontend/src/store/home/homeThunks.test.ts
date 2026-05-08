@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { homeReducer } from './homeSlice';
+import { userReducer } from '@/store/users/usersSlice';
 import {
   addMovieToUser,
   createUser,
@@ -68,7 +68,7 @@ const getMockContainer = (): MockAppContainer =>
 const mkStore = () =>
   configureStore({
     reducer: {
-      home: homeReducer,
+      home: userReducer,
     },
   });
 

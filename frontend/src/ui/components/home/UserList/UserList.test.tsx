@@ -10,6 +10,22 @@ import { getAxiosMocks } from '@/test/utils/axiosMock';
 jest.mock('axios');
 
 describe('UserList', () => {
+  it('renders loading while users are loading', async () => {
+    const { get } = getAxiosMocks();
+    get.mockResolvedValueOnce({
+      data: { data: [], meta: { total: 0, last_page: 1, current_page: 1, per_page: 8, prev: null, next: null } },
+    });
+
+    renderWithStore(<UserList />, {
+      reducer: { home: homeReducer },
+      preloadedState: buildHomePreloadedState({
+        userState: { loading: true, data: [], meta: null, page: 1 },
+      }),
+    });
+
+    expect(screen.getByTestId('users-loading')).toBeInTheDocument();
+  });
+
   it('renders users after load and opens create-user modal', async () => {
     const user: User = buildUser({ id: 1, name: 'Ana', age: 28, latest_movies: [] });
     const { get } = getAxiosMocks();

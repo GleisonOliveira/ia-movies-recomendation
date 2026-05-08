@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loadUsers, setSelectedUser, setUsersPage } from '@/store/home/homeSlice';
+import { loadUsers, setSelectedUser, setUsersPage } from '@/store/users/usersSlice';
 
 export function useUserHome() {
   const dispatch = useAppDispatch();

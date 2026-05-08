@@ -1,10 +1,11 @@
-import { Alert, Box, Button, Card, CardContent, Dialog, Pagination, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Dialog, Pagination, Stack, Typography } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { useUserHome } from './useUserHome';
 import { UserListItem } from '../UserListItem/UserListItem';
 import { UserCreateForm } from '../UserCreateForm/UserCreateForm';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { openCreateUserModal, closeCreateUserModal } from '@/store/home/homeSlice';
+import { openCreateUserModal, closeCreateUserModal } from '@/store/users/usersSlice';
+import { Loading } from '../_shared/Loading/Loading';
 
 export function UserList() {
   const dispatch = useAppDispatch();
@@ -50,7 +51,7 @@ export function UserList() {
       </Dialog>
       {usersError ? <Alert severity="error">{usersError}</Alert> : null}
       {usersLoading ? (
-        <Skeleton variant="rectangular" sx={{ borderRadius: 0, minHeight: '40vh' }} />
+        <Loading minHeight="40vh" testId="users-loading" />
       ) : (
         <Card
           sx={{

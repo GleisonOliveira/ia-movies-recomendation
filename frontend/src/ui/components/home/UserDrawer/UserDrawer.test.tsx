@@ -2,7 +2,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderWithStore } from '@/test/testUtils';
 import type { Movie } from '@/services/movie/MovieService';
 import type { User } from '@/services/user/user-service';
-import { homeReducer } from '@/store/home/homeSlice';
+import { userReducer } from '@/store/users/usersSlice';
 import { UserDrawer } from './UserDrawer';
 import { buildMovie, buildUser } from '@/test/store/home/__fixtures__/homeThunksFixtures';
 import { buildHomePreloadedState } from '@/test/store/home/__fixtures__/homeComponentState';
@@ -43,6 +43,21 @@ describe('UserDrawer', () => {
     del.mockReset();
   });
 
+  it('renders loading while movies are loading', () => {
+    const user: User = buildUser({ id: 1, name: 'Ana', age: 28, latest_movies: [] });
+
+    renderWithStore(<UserDrawer />, {
+      reducer: { home: userReducer },
+      preloadedState: buildHomePreloadedState({
+        selectedUser: user,
+        userState: { data: [user] },
+        movieState: { userMovies: { loading: true, data: [], meta: null }, loading: false, selected: null },
+      }),
+    });
+
+    expect(screen.getByTestId('user-movies-loading')).toBeInTheDocument();
+  });
+
   it('loads movies when drawer opens and closes on "Fechar"', async () => {
     const user: User = buildUser({ id: 1, name: 'Ana', age: 28, latest_movies: [] });
     const movie: Movie = buildMovie({ id: 10, title: 'Matrix', external_id: 10 });
@@ -58,7 +73,7 @@ describe('UserDrawer', () => {
     });
 
     renderWithStore(<UserDrawer />, {
-      reducer: { home: homeReducer },
+      reducer: { home: userReducer },
       preloadedState: buildHomePreloadedState({
         selectedUser: user,
         userState: { data: [user] },
@@ -102,7 +117,7 @@ describe('UserDrawer', () => {
     del.mockResolvedValueOnce({ status: 204 });
 
     renderWithStore(<UserDrawer />, {
-      reducer: { home: homeReducer },
+      reducer: { home: userReducer },
       preloadedState: buildHomePreloadedState({
         selectedUser: user,
         userState: { data: [user] },
@@ -144,7 +159,7 @@ describe('UserDrawer', () => {
     });
 
     renderWithStore(<UserDrawer />, {
-      reducer: { home: homeReducer },
+      reducer: { home: userReducer },
       preloadedState: buildHomePreloadedState({
         selectedUser: user,
         userState: { data: [user] },
@@ -198,7 +213,7 @@ describe('UserDrawer', () => {
     });
 
     renderWithStore(<UserDrawer />, {
-      reducer: { home: homeReducer },
+      reducer: { home: userReducer },
       preloadedState: buildHomePreloadedState({
         selectedUser: user,
         userState: { data: [user] },

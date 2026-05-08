@@ -5,7 +5,7 @@ import {
   setCreateUserAge,
   setCreateUserName,
   submitCreateUserModal,
-} from '@/store/home/homeSlice';
+} from '@/store/users/usersSlice';
 
 export function UserCreateForm() {
   const dispatch = useAppDispatch();

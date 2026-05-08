@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { createAppContainer } from '@/shared/di/createAppContainer';
 import {
-  homeReducer,
+  userReducer,
   closeCreateUserModal,
   closeToast,
   openCreateUserModal,
@@ -11,10 +11,18 @@ import {
   setSelectedMovie,
   setSelectedUser,
   setUserMoviesPage,
-} from './homeSlice';
+} from './usersSlice';
 import type { Movie } from '@/services/movie/MovieService';
 import type { User } from '@/services/user/user-service';
-import { loadUsers, createUser, loadUserMovies, searchMovies, addMovieToUser, removeMovieFromUser, submitCreateUserModal } from './homeThunks';
+import {
+  loadUsers,
+  createUser,
+  loadUserMovies,
+  searchMovies,
+  addMovieToUser,
+  removeMovieFromUser,
+  submitCreateUserModal,
+} from '@/store/home/homeThunks';
 
 import { buildMovie, buildUser } from '@/test/store/home/__fixtures__/homeThunksFixtures';
 
@@ -72,7 +80,7 @@ const getMockContainer = (): MockAppContainer =>
 const mkStore = () =>
   configureStore({
     reducer: {
-      home: homeReducer,
+      home: userReducer,
     },
   });
 

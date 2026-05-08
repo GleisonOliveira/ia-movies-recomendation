@@ -1,7 +1,8 @@
-import { Alert, Box, Button, Drawer, Pagination, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Drawer, Pagination, Stack, Typography } from '@mui/material';
 import { useMovieHome } from './useMovieHome';
 import { MovieCard } from '../MovieCard/MovieCard';
 import { MovieSearch } from '../MovieSearch/MovieSearch';
+import { Loading } from '../_shared/Loading/Loading';
 
 export function UserDrawer() {
   const {
@@ -39,7 +40,7 @@ export function UserDrawer() {
             <Typography variant="subtitle1" gutterBottom>
               Filmes associados
             </Typography>
-            {userMovies.loading ? <Skeleton variant="rectangular" sx={{ minHeight: '18vh' }} /> : null}
+            {userMovies.loading ? <Loading minHeight="18vh" testId="user-movies-loading" /> : null}
             {userMovies.error ? <Alert severity="error">{userMovies.error}</Alert> : null}
             <Box
               sx={{
