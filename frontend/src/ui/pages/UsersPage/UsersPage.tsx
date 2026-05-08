@@ -3,7 +3,7 @@ import { useAppDispatch } from '@/store/hooks';
 import { resetHomeState } from '@/store/users/usersSlice';
 import { HomeTemplate } from '@/ui/components/home/HomeTemplate/HomeTemplate';
 
-export function UsersTemplate() {
+export function UsersPage() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -12,4 +12,3 @@ export function UsersTemplate() {
 
   return <HomeTemplate />;
 }
-

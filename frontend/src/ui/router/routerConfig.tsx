@@ -1,6 +1,6 @@
 import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
 import { AppContainer } from '@/ui/layout/AppContainer';
-import { UsersTemplate } from '@/ui/pages/UsersTemplate/UsersTemplate';
+import { UsersPage } from '@/ui/pages/UsersPage/UsersPage';
 import { MoviesPage } from '@/ui/pages/MoviesPage/MoviesPage';
 
 const rootRoute = createRootRoute({
@@ -10,13 +10,13 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: UsersTemplate,
+  component: UsersPage,
 });
 
 const usersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'users',
-  component: UsersTemplate,
+  component: UsersPage,
 });
 
 const moviesRoute = createRoute({
