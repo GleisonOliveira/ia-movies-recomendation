@@ -19,6 +19,7 @@ Code Context Optimization Rules:
  Avoid raw file access
  Work with compacted code by default
  Request minimal additional context when needed
+ Not use any type
 
 Principles:
  Small, single-purpose components

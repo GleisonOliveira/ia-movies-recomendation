@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import type { Movie } from '@/services/movie/MovieService';
-import { MissingPosterIcon } from './icons';
+import { MissingPosterIcon } from '../_shared/icons';
 import { env } from '@/config/env';
 
 type Props = {
@@ -12,27 +12,26 @@ export function MovieMiniCard({ movie }: Props) {
     <Box
       sx={{
         display: 'flex',
-        gap: 1,
-        alignItems: 'center',
+        flexDirection: 'column',
+        gap: 0.75,
         p: 1,
-        borderRadius: 2,
+        borderRadius: 0,
         border: '1px solid',
         borderColor: 'divider',
         bgcolor: 'background.paper',
-        width: { xs: 220, lg: '100%' },
+        width: { xs: '100%', lg: '100%' },
+        maxWidth: 220,
         minWidth: 0,
       }}
     >
       <Box
         sx={{
-          width: 56,
-          height: 72,
-          borderRadius: 1.5,
+          width: '100%',
+          aspectRatio: '56 / 72',
+          borderRadius: 0,
           overflow: 'hidden',
           bgcolor: 'action.hover',
           flexShrink: 0,
-          border: '1px solid',
-          borderColor: 'divider',
         }}
       >
         {movie.poster_path ? (
@@ -57,7 +56,7 @@ export function MovieMiniCard({ movie }: Props) {
         )}
       </Box>
 
-      <Typography variant="body2" sx={{ fontWeight: 700 }} title={movie.title}>
+      <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1.2 }} title={movie.title}>
         {movie.title}
       </Typography>
     </Box>

@@ -8,9 +8,10 @@ import { MovieNeuralTrainCommand } from './movie/movie-neural-train/movie-neural
 import { PrismaService } from '../prisma/prisma-service/prisma-service';
 import { TmdbNeuralService } from '../neural-computer/tmdb/tmdb-neural-service';
 import { NeuralComputerServiceFactory } from '../neural-computer/neural-computer-service-factory';
+import { TensorflowModule } from '@/modules/tensorflow/tensorflow.module';
 
 @Module({
-  imports: [HttpModule, MovieModule, ConnectorsModule],
+  imports: [HttpModule, MovieModule, ConnectorsModule, TensorflowModule],
   providers: [
     TmdbDatabaseSyncCommand,
     MovieNeuralTrainCommand,

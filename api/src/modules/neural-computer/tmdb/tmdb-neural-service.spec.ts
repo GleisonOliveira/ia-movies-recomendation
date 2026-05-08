@@ -1,12 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TmdbNeuralService } from './tmdb-neural-service';
+import { TfjsNodeService } from '@/modules/tensorflow/tfjs-node.service';
 
 describe('TmdbNeuralService', () => {
   let service: TmdbNeuralService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TmdbNeuralService],
+      providers: [
+        TmdbNeuralService,
+        {
+          provide: TfjsNodeService,
+          useValue: { tf: {} },
+        },
+      ],
     }).compile();
 
     service = module.get<TmdbNeuralService>(TmdbNeuralService);

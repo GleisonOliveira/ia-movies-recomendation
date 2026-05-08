@@ -13,7 +13,7 @@ export function MissingPosterIcon() {
     <img
       src="/assets/images/noimage.png"
       alt="Sem poster"
-      style={{ width: 28, height: 42, objectFit: 'contain' }}
+      style={{ width: '75%', height: '75%', objectFit: 'contain' }}
     />
   );
 }

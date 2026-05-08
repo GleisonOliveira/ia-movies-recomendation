@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NeuralComputerServiceFactory } from './neural-computer-service-factory';
 import { TmdbNeuralService } from './tmdb/tmdb-neural-service';
+import { TfjsNodeService } from '@/modules/tensorflow/tfjs-node.service';
 
 describe('NeuralComputerServiceFactory', () => {
   let factory: NeuralComputerServiceFactory;
@@ -8,7 +9,11 @@ describe('NeuralComputerServiceFactory', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TmdbNeuralService, NeuralComputerServiceFactory],
+      providers: [
+        TmdbNeuralService,
+        NeuralComputerServiceFactory,
+        { provide: TfjsNodeService, useValue: { tf: {} } },
+      ],
     }).compile();
 
     tmdbNeuralService = module.get<TmdbNeuralService>(TmdbNeuralService);

@@ -1,15 +1,21 @@
 import { Autocomplete, Box, Button, TextField } from '@mui/material';
-import { AddMovieIcon } from './icons';
-import type { MovieSearchProps } from './types';
+import { AddMovieIcon } from '../_shared/icons';
+import type { MovieSearchProps } from '../_shared/types';
 
 export function MovieSearch({ movieState, movieActions }: MovieSearchProps) {
   const { query: movieQuery, options: movieOptions, loading: movieOptionsLoading, selected: selectedMovieOption } = movieState;
   const { handleMovieQueryChange, setSelectedMovieOption, addMovieToUser } = movieActions;
 
   return (
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'stretch' }}>
       <Autocomplete
         fullWidth
+        sx={{
+          flex: 1,
+          '& .MuiInputBase-root': {
+            height: (theme) => theme.spacing(7),
+          },
+        }}
         options={movieOptions}
         loading={movieOptionsLoading}
         inputValue={movieQuery}
@@ -23,7 +29,13 @@ export function MovieSearch({ movieState, movieActions }: MovieSearchProps) {
       <Button
         variant="contained"
         startIcon={<AddMovieIcon />}
-        sx={{ minWidth: 120, mt: 0.5, height: 56 }}
+        sx={{
+          minWidth: 120,
+          alignSelf: 'stretch',
+          height: (theme) => theme.spacing(7),
+          minHeight: (theme) => theme.spacing(7),
+          py: 0,
+        }}
         disabled={!selectedMovieOption}
         onClick={() => {
           void addMovieToUser(selectedMovieOption);

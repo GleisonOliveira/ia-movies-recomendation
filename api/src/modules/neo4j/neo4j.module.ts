@@ -21,8 +21,11 @@ export const NEO4J_DRIVER = Symbol('NEO4J_DRIVER');
           throw new Error('Missing NEO4J_USER or NEO4J_PASSWORD');
         }
 
-        const dbParam = encodeURIComponent(database);
-        const uri = `bolt://${host}:${port}?database=${dbParam}`;
+        // `neo4j-driver` does not support `?database=...` query params on `bolt://` URIs.
+        // We keep a plain bolt URI and leave database selection to server/default behavior.
+        // (If you need per-session database selection, pass `database` to `driver.session({ database })`.)
+        void database;
+        const uri = `bolt://${host}:${port}`;
 
         return neo4j.driver(uri, neo4j.auth.basic(user, password), {
           // Safe defaults for a containerized dev environment.

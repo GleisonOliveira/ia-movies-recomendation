@@ -1,7 +1,7 @@
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import type { User } from '@/services/user/user-service';
 import type { Movie } from '@/services/movie/MovieService';
-import { MovieMiniCard } from './MovieMiniCard';
+import { MovieMiniCard } from '../MovieMiniCard/MovieMiniCard';
 
 type Props = {
   user: User;
@@ -16,14 +16,14 @@ export function UserListItem({ user, onClick }: Props) {
       sx={{
         p: 2,
         cursor: 'pointer',
+        borderRadius: 0,
         border: '1px solid',
         borderColor: 'divider',
-        background: 'linear-gradient(135deg, rgba(139,211,255,0.08), rgba(255,255,255,0.02))',
-        transition: 'transform 160ms ease, border-color 160ms ease, background 160ms ease',
+        backgroundColor: 'var(--app-surface)',
+        transition: 'border-color 160ms ease, background 160ms ease',
         '&:hover': {
-          transform: 'translateY(-2px)',
-          borderColor: 'primary.main',
-          background: 'linear-gradient(135deg, rgba(139,211,255,0.15), rgba(255,255,255,0.04))',
+          borderColor: 'var(--app-border-2)',
+          backgroundColor: 'var(--app-surface-2)',
         },
       }}
     >
@@ -61,7 +61,11 @@ export function UserListItem({ user, onClick }: Props) {
                   color: 'text.secondary',
                   display: 'grid',
                   placeItems: 'center',
-                  borderRadius: 2,
+                  width: '75%',
+                  height: '75%',
+                  mx: 'auto',
+                  my: 'auto',
+                  borderRadius: 0,
                   border: '1px dashed',
                   borderColor: 'divider',
                   p: 1,

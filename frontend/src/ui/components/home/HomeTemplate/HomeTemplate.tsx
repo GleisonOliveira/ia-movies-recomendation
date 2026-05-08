@@ -1,6 +1,6 @@
 import { Stack } from '@mui/material';
-import { UserList } from './UserList';
-import { UserDrawer } from './UserDrawer';
+import { UserList } from '../UserList/UserList';
+import { UserDrawer } from '../UserDrawer/UserDrawer';
 
 export function HomeTemplate() {
   return (

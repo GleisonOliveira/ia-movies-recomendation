@@ -1,8 +1,8 @@
 import { Alert, Box, Button, Card, CardContent, Dialog, Pagination, Skeleton, Stack, Typography } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { useUserHome } from './useUserHome';
-import { UserListItem } from './UserListItem';
-import { UserCreateForm } from './UserCreateForm';
+import { UserListItem } from '../UserListItem/UserListItem';
+import { UserCreateForm } from '../UserCreateForm/UserCreateForm';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { openCreateUserModal, closeCreateUserModal } from '@/store/home/homeSlice';
 
@@ -18,8 +18,8 @@ export function UserList() {
     <Stack spacing={3}>
       <Card
         sx={{
-          background: 'linear-gradient(135deg, rgba(139,211,255,0.12), rgba(16,25,47,0.96))',
-          border: '1px solid rgba(139,211,255,0.2)',
+          backgroundColor: 'var(--app-bg-1)',
+          border: '1px solid var(--app-border)',
         }}
       >
         <CardContent>
@@ -50,13 +50,12 @@ export function UserList() {
       </Dialog>
       {usersError ? <Alert severity="error">{usersError}</Alert> : null}
       {usersLoading ? (
-        <Skeleton variant="rectangular" height={320} sx={{ borderRadius: 4 }} />
+        <Skeleton variant="rectangular" sx={{ borderRadius: 0, minHeight: '40vh' }} />
       ) : (
         <Card
           sx={{
-            border: '1px solid rgba(255,255,255,0.08)',
-            background:
-              'linear-gradient(180deg, rgba(16,25,47,0.95), rgba(11,16,32,0.98))',
+            border: '1px solid var(--app-border)',
+            backgroundColor: 'var(--app-bg-1)',
           }}
         >
           <CardContent>

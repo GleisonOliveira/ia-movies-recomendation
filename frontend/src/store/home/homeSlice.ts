@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Movie } from '@/services/movie/MovieService';
 import type { User } from '@/services/user/user-service';
-import type { PaginationMeta, UserMoviesState } from '@/ui/pages/home/types';
+import type { PaginationMeta, UserMoviesState } from '@/ui/components/home/_shared/types';
 import {
   addMovieToUser,
   createUser,
@@ -27,7 +27,7 @@ type CreateUserModalErrors = {
   age: string | null;
 };
 
-type HomeState = {
+export type HomeState = {
   selectedUser: User | null;
   createUserModal: {
     open: boolean;
@@ -58,7 +58,8 @@ type HomeState = {
   };
 };
 
-const initialState: HomeState = {
+export function createInitialHomeState(): HomeState {
+  return {
   selectedUser: null,
   createUserModal: {
     open: false,
@@ -90,11 +91,12 @@ const initialState: HomeState = {
     loading: false,
     selected: null,
   },
-};
+  };
+}
 
 const homeSlice = createSlice({
   name: 'home',
-  initialState,
+  initialState: createInitialHomeState(),
   reducers: {
     setSelectedUser(state, action: PayloadAction<User | null>) {
       state.selectedUser = action.payload;

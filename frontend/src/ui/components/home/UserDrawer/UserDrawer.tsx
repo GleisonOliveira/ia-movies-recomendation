@@ -1,7 +1,7 @@
 import { Alert, Box, Button, Drawer, Pagination, Skeleton, Stack, Typography } from '@mui/material';
 import { useMovieHome } from './useMovieHome';
-import { MovieCard } from './MovieCard';
-import { MovieSearch } from './MovieSearch';
+import { MovieCard } from '../MovieCard/MovieCard';
+import { MovieSearch } from '../MovieSearch/MovieSearch';
 
 export function UserDrawer() {
   const {
@@ -14,7 +14,7 @@ export function UserDrawer() {
 
   return (
     <Drawer anchor="right" open={drawerOpen} onClose={closeDrawer}>
-      <Box sx={{ width: { xs: 380, sm: 640, md: 920 }, p: 3 }}>
+      <Box sx={{ width: { xs: '92vw', sm: '70vw', md: '60vw' }, p: 3 }}>
         <Stack spacing={2}>
           <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <Box>
@@ -39,16 +39,17 @@ export function UserDrawer() {
             <Typography variant="subtitle1" gutterBottom>
               Filmes associados
             </Typography>
-            {userMovies.loading ? <Skeleton variant="rectangular" height={140} /> : null}
+            {userMovies.loading ? <Skeleton variant="rectangular" sx={{ minHeight: '18vh' }} /> : null}
             {userMovies.error ? <Alert severity="error">{userMovies.error}</Alert> : null}
             <Box
               sx={{
                 display: 'grid',
-                gap: 2,
+                gap: 1.25,
                 gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, minmax(0, 1fr))',
-                  lg: 'repeat(3, minmax(0, 1fr))',
+                  xs: 'repeat(2, minmax(0, 1fr))',
+                  sm: 'repeat(3, minmax(0, 1fr))',
+                  md: 'repeat(4, minmax(0, 1fr))',
+                  xl: 'repeat(6, minmax(0, 1fr))',
                 },
               }}
             >

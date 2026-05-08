@@ -1,5 +1,5 @@
 import { Alert, Box, Container, Snackbar, Stack, Typography } from '@mui/material';
-import { HomeTemplate } from '@/ui/pages/home/HomeTemplate';
+import { HomeTemplate } from '@/ui/components/home/HomeTemplate/HomeTemplate';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { closeToast } from '@/store/home/homeSlice';
 
@@ -8,7 +8,7 @@ export function AppContainer() {
   const toast = useAppSelector((state) => state.home.toast);
 
   return (
-    <Box sx={{ minHeight: '100vh', py: 6, background: 'linear-gradient(180deg, #0b1020, #111a33)' }}>
+    <Box sx={{ minHeight: '100vh', py: 6, backgroundColor: 'var(--app-bg-0)' }}>
       <Container maxWidth="lg">
         <Stack spacing={4}>
           <Box>

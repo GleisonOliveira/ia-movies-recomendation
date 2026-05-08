@@ -1,0 +1,40 @@
+import type { HomeState } from '@/store/home/homeSlice';
+import { createInitialHomeState } from '@/store/home/homeSlice';
+
+type PartialDeep<T> = {
+  [K in keyof T]?: T[K] extends readonly unknown[]
+    ? T[K]
+    : T[K] extends object
+      ? PartialDeep<T[K]>
+      : T[K];
+};
+
+export function buildHomePreloadedState(overrides: PartialDeep<HomeState> = {}) {
+  const base: HomeState = createInitialHomeState();
+  return {
+    home: {
+      ...base,
+      ...(overrides as PartialDeep<HomeState>),
+      userState: {
+        ...base.userState,
+        ...(overrides.userState ?? {}),
+      },
+      movieState: {
+        ...base.movieState,
+        ...(overrides.movieState ?? {}),
+        userMovies: {
+          ...base.movieState.userMovies,
+          ...(overrides.movieState?.userMovies ?? {}),
+        },
+      },
+      createUserModal: {
+        ...base.createUserModal,
+        ...(overrides.createUserModal ?? {}),
+      },
+      toast: {
+        ...base.toast,
+        ...(overrides.toast ?? {}),
+      },
+    },
+  };
+}
