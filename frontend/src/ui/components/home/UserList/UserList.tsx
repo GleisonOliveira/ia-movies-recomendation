@@ -51,7 +51,7 @@ export function UserList() {
       </Dialog>
       {usersError ? <Alert severity="error">{usersError}</Alert> : null}
       {usersLoading ? (
-        <Loading minHeight="40vh" testId="users-loading" />
+        <Loading minHeight="40vh" data-testId="users-loading" />
       ) : (
         <Card
           sx={{

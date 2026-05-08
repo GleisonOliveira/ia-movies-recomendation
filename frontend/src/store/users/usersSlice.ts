@@ -10,7 +10,7 @@ import {
   removeMovieFromUser,
   searchMovies,
   submitCreateUserModal,
-} from '@/store/home/homeThunks';
+} from '@/store/home/usersThunks';
 
 export {
   addMovieToUser,
@@ -159,9 +159,9 @@ const usersSlice = createSlice({
       })
       .addCase(loadUsers.fulfilled, (state, action) => {
         state.userState.loading = false;
-        state.userState.error = null;
         state.userState.data = action.payload.data;
         state.userState.meta = action.payload.meta;
+        state.userState.error = null;
       })
       .addCase(loadUsers.rejected, (state, action) => {
         state.userState.loading = false;

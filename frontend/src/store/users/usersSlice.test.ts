@@ -22,7 +22,7 @@ import {
   addMovieToUser,
   removeMovieFromUser,
   submitCreateUserModal,
-} from '@/store/home/homeThunks';
+} from '@/store/home/usersThunks';
 
 import { buildMovie, buildUser } from '@/test/store/home/__fixtures__/homeThunksFixtures';
 
@@ -39,7 +39,7 @@ import type {
   UserServiceGetMoviesByUserIdReturn,
   UserServiceRemoveMovieFromUserArg0,
   UserServiceRemoveMovieFromUserReturn,
-} from '@/test/store/home/homeThunksTypes';
+} from '@/test/store/home/usersThunksTypes';
 
 type MockAppContainer = {
   userService: ReturnType<typeof createMockUserService>;

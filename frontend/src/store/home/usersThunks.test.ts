@@ -8,7 +8,7 @@ import {
   removeMovieFromUser,
   searchMovies,
   submitCreateUserModal,
-} from './homeThunks';
+} from './usersThunks';
 
 import type { Movie } from '@/services/movie/MovieService';
 import type { User } from '@/services/user/user-service';
@@ -27,7 +27,7 @@ import type {
   UserServiceGetMoviesByUserIdReturn,
   UserServiceRemoveMovieFromUserArg0,
   UserServiceRemoveMovieFromUserReturn,
-} from '@/test/store/home/homeThunksTypes';
+} from '@/test/store/home/usersThunksTypes';
 
 type MockAppContainer = {
   userService: ReturnType<typeof createMockUserService>;
@@ -72,7 +72,7 @@ const mkStore = () =>
     },
   });
 
-describe('homeThunks', () => {
+describe('usersThunks', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
