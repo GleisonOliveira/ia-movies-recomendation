@@ -35,7 +35,7 @@ export function AppContainer() {
                 Movies Recommendation
               </Typography>
               <Typography variant="h3" sx={{ fontWeight: 800 }}>
-                Frontend em React com DI, Zod e Material UI
+                Recomendação personalizada de filmes
               </Typography>
             </Box>
             <Box>

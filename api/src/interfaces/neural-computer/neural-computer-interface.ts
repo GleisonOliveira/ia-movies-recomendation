@@ -1,3 +1,5 @@
+import { Movie } from '@/generatedprisma/client';
+
 export interface NeuralComputerInterface {
-  train(data: any): Promise<void>;
+  train(data: Movie[]): Promise<void>;
 }

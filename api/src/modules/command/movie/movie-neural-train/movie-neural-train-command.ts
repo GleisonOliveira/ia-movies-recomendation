@@ -2,6 +2,7 @@ import { Command, CommandRunner } from 'nest-commander';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
 import { NeuralComputerFactoryServiceInterface } from '@/interfaces/neural-computer/neural-computer-factory-service-interface';
+import { Movie } from '@/generatedprisma/client';
 
 const CHUNK_SIZE = 200;
 
@@ -57,7 +58,7 @@ export class MovieNeuralTrainCommand extends CommandRunner {
     }
   }
 
-  async #trainMovies(movies: unknown[]): Promise<void> {
+  async #trainMovies(movies: Movie[]): Promise<void> {
     const neuralComputerService = this.neuralComputerFactory.create();
 
     await neuralComputerService.train(movies);
