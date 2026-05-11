@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NeuralComputerServiceFactory } from './neural-computer-service-factory';
 import { TmdbNeuralService } from './tmdb/tmdb-neural-service';
 import { TfjsNodeService } from '@/modules/tensorflow/tfjs-node.service';
+import { MovieDataNormalizationService } from './services/movie-data-normalization.service';
 
 describe('NeuralComputerServiceFactory', () => {
   let factory: NeuralComputerServiceFactory;
@@ -13,6 +14,10 @@ describe('NeuralComputerServiceFactory', () => {
         TmdbNeuralService,
         NeuralComputerServiceFactory,
         { provide: TfjsNodeService, useValue: { tf: {} } },
+        {
+          provide: MovieDataNormalizationService,
+          useValue: { normalizeMovieFeatures: jest.fn() },
+        },
       ],
     }).compile();
 

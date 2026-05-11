@@ -1,0 +1,286 @@
+import * as tf from '@tensorflow/tfjs-node';
+
+/**
+ * =========================================================
+ * TIPOS
+ * =========================================================
+ */
+
+type TrainingRow = {
+  userId: number;
+  movieId: number;
+  liked: number;
+};
+
+/**
+ * =========================================================
+ * LOADER EM LOTES
+ * =========================================================
+ */
+
+class MovieBatchLoader {
+  private current = 0;
+
+  // Simulando banco de dados
+  private data: TrainingRow[] = [
+    { userId: 0, movieId: 0, liked: 1 },
+    { userId: 0, movieId: 1, liked: 0 },
+    { userId: 1, movieId: 0, liked: 1 },
+    { userId: 1, movieId: 2, liked: 1 },
+    { userId: 2, movieId: 1, liked: 0 },
+    { userId: 2, movieId: 2, liked: 1 },
+  ];
+
+  async nextBatch(size = 2): Promise<TrainingRow[]> {
+    const batch = this.data.slice(this.current, this.current + size);
+
+    this.current += size;
+
+    return batch;
+  }
+
+  reset() {
+    this.current = 0;
+  }
+}
+
+/**
+ * =========================================================
+ * PREPARAÇÃO DOS DADOS
+ * =========================================================
+ */
+
+class DataPreparator {
+  prepare(row: TrainingRow) {
+    return {
+      xs: {
+        userInput: [row.userId],
+        movieInput: [row.movieId],
+      },
+      ys: [row.liked],
+    };
+  }
+}
+
+/**
+ * =========================================================
+ * DATASET
+ * =========================================================
+ */
+
+function createDataset(
+  loader: MovieBatchLoader,
+  preparator: DataPreparator,
+) {
+  return tf.data.generator(async function* () {
+    while (true) {
+      const batch = await loader.nextBatch();
+
+      if (!batch.length) {
+        return;
+      }
+
+      for (const row of batch) {
+        const prepared = preparator.prepare(row);
+
+        yield {
+          xs: {
+            userInput: tf.tensor2d(
+              [prepared.xs.userInput],
+              [1, 1],
+            ),
+
+            movieInput: tf.tensor2d(
+              [prepared.xs.movieInput],
+              [1, 1],
+            ),
+          },
+
+          ys: tf.tensor2d(
+            [prepared.ys],
+            [1, 1],
+          ),
+        };
+      }
+    }
+  });
+}
+
+/**
+ * =========================================================
+ * MODELO
+ * =========================================================
+ */
+
+function createModel(
+  numUsers: number,
+  numMovies: number,
+) {
+  /**
+   * INPUTS
+   */
+  const userInput = tf.input({
+    shape: [1],
+    name: 'userInput',
+  });
+
+  const movieInput = tf.input({
+    shape: [1],
+    name: 'movieInput',
+  });
+
+  /**
+   * USER EMBEDDING
+   */
+  const userEmbedding = tf.layers.embedding({
+    inputDim: numUsers,
+    outputDim: 8,
+    name: 'userEmbedding',
+  }).apply(userInput) as tf.SymbolicTensor;
+
+  /**
+   * MOVIE EMBEDDING
+   */
+  const movieEmbedding = tf.layers.embedding({
+    inputDim: numMovies,
+    outputDim: 8,
+    name: 'movieEmbedding',
+  }).apply(movieInput) as tf.SymbolicTensor;
+
+  /**
+   * FLATTEN
+   */
+  const userVector = tf.layers.flatten()
+    .apply(userEmbedding) as tf.SymbolicTensor;
+
+  const movieVector = tf.layers.flatten()
+    .apply(movieEmbedding) as tf.SymbolicTensor;
+
+  /**
+   * CONCAT
+   */
+  const merged = tf.layers.concatenate()
+    .apply([userVector, movieVector]) as tf.SymbolicTensor;
+
+  /**
+   * DENSE
+   */
+  const dense = tf.layers.dense({
+    units: 16,
+    activation: 'relu',
+  }).apply(merged) as tf.SymbolicTensor;
+
+  /**
+   * OUTPUT
+   */
+  const output = tf.layers.dense({
+    units: 1,
+    activation: 'sigmoid',
+  }).apply(dense) as tf.SymbolicTensor;
+
+  /**
+   * MODEL
+   */
+  const model = tf.model({
+    inputs: [userInput, movieInput],
+    outputs: output,
+  });
+
+  /**
+   * COMPILE
+   */
+  model.compile({
+    optimizer: 'adam',
+    loss: 'binaryCrossentropy',
+    metrics: ['accuracy'],
+  });
+
+  return model;
+}
+
+/**
+ * =========================================================
+ * EXPORTADOR DE EMBEDDINGS
+ * =========================================================
+ */
+
+class EmbeddingExporter {
+  constructor(
+    private model: tf.LayersModel,
+  ) {}
+
+  exportMovieEmbeddings() {
+    const layer = this.model.getLayer(
+      'movieEmbedding',
+    ) as tf.layers.Embedding;
+
+    const weights = layer.getWeights()[0];
+
+    const embeddings = weights.arraySync() as number[][];
+
+    return embeddings.map((vector, movieId) => ({
+      movieId,
+      embedding: vector,
+    }));
+  }
+}
+
+/**
+ * =========================================================
+ * TREINO
+ * =========================================================
+ */
+
+async function train() {
+  const loader = new MovieBatchLoader();
+
+  const preparator = new DataPreparator();
+
+  const dataset = createDataset(
+    loader,
+    preparator,
+  ).batch(2);
+
+  const model = createModel(
+    10, // num users
+    10, // num movies
+  );
+
+  /**
+   * TREINA
+   */
+  await model.fitDataset(dataset, {
+    epochs: 5,
+  });
+
+  /**
+   * SALVA MODELO
+   */
+  await model.save(
+    'file://./movie-recommendation-model',
+  );
+
+  console.log('Modelo salvo');
+
+  /**
+   * EXPORTA EMBEDDINGS
+   */
+  const exporter = new EmbeddingExporter(
+    model,
+  );
+
+  const movieEmbeddings =
+    exporter.exportMovieEmbeddings();
+
+  console.log('\nEmbeddings:\n');
+
+  console.log(movieEmbeddings);
+}
+
+/**
+ * =========================================================
+ * START
+ * =========================================================
+ */
+
+train();
