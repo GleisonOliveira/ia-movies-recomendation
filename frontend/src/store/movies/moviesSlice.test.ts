@@ -34,17 +34,17 @@ const mkStore = () =>
   });
 
 describe('moviesSlice', () => {
-  it('initialState matches expected defaults', () => {
-    const store = mkStore();
-    const state = store.getState().movies;
+    it('initialState matches expected defaults', () => {
+      const store = mkStore();
+      const state = store.getState().movies;
 
-    expect(state).toEqual({
-      loading: false,
-      error: null,
-      data: [],
-      meta: null,
-      page: 1,
-      query: '',
+      expect(state).toEqual({
+        loading: true,
+        error: null,
+        data: [],
+        meta: null,
+        page: 1,
+        query: '',
     });
   });
 
@@ -58,7 +58,7 @@ describe('moviesSlice', () => {
       store.dispatch(resetMoviesState());
 
       expect(store.getState().movies).toEqual({
-        loading: false,
+        loading: true,
         error: null,
         data: [],
         meta: null,
@@ -138,4 +138,3 @@ describe('moviesSlice', () => {
     });
   });
 });
-

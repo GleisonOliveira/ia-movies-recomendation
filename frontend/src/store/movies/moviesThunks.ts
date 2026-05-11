@@ -31,8 +31,3 @@ export const loadMovies = createAsyncThunk(
   },
 );
 
-export const initialMoviesLoad = createAsyncThunk('movies/initialMoviesLoad', async (_, thunkApi) => {
-  const state = thunkApi.getState() as { movies: { page: number; name: string } };
-  return thunkApi.dispatch(loadMovies({ page: state.movies.page, name: state.movies.name }));
-});
-

@@ -45,10 +45,10 @@ export function UserListItem({ user, onClick }: Props) {
           <Box
             sx={{
               pl: 1,
-              display: { xs: 'flex', lg: 'grid' },
-              gridTemplateColumns: { lg: 'repeat(5, minmax(0, 1fr))' },
-              gap: { xs: 1, lg: 1 },
-              flexWrap: { xs: 'wrap', lg: 'nowrap' },
+              display: 'flex',
+              justifyContent: 'flex-start',
+              flexWrap: { xs: 'wrap', lg: 'wrap' },
+              gap: 1,
               alignItems: 'stretch',
             }}
           >

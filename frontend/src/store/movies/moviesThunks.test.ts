@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import type { Movie } from '@/services/movie/MovieService';
 import { createAppContainer } from '@/shared/di/createAppContainer';
 import { moviesReducer } from './moviesSlice';
-import { loadMovies, initialMoviesLoad } from './moviesThunks';
+import { loadMovies } from './moviesThunks';
 
 type MockAppContainer = {
   movieService: ReturnType<typeof createMockMovieService>;
@@ -67,21 +67,6 @@ describe('moviesThunks', () => {
 
     expect(store.getState().movies.loading).toBe(false);
     expect(store.getState().movies.error).toBe('boom');
-  });
-
-  it('initialMoviesLoad dispatches loadMovies with current page (and name from state cast)', async () => {
-    const { movieService } = getMockContainer();
-    movieService.getAll.mockResolvedValueOnce({
-      data: [],
-      meta: { last_page: 1 },
-    });
-
-    const store = mkStore();
-    // O thunk usa `state.movies.name` (não existe no slice atual); como ele faz cast no getState,
-    // o valor vai sair como `undefined` e ainda assim deve disparar `loadMovies`.
-    await store.dispatch(initialMoviesLoad());
-
-    expect(movieService.getAll).toHaveBeenCalledWith({ page: 1, per_page: 12, name: undefined });
   });
 });
 

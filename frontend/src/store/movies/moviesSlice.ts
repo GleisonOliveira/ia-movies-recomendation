@@ -13,7 +13,7 @@ export type MoviesState = {
 
 export function createInitialMoviesState(): MoviesState {
   return {
-    loading: false,
+    loading: true,
     error: null,
     data: [],
     meta: null,

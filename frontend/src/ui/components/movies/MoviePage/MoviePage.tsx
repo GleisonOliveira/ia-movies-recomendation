@@ -1,15 +1,15 @@
-import { Alert, Box, Button, Card, CardContent, Pagination, Stack, TextField, Typography } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { Alert, Box, Button, Pagination, Stack, Typography } from '@mui/material';
 import { MovieReadCard } from '../MovieReadCard/MovieReadCard';
 import { useMoviePage } from './useMoviePage';
 import { useAppDispatch } from '@/store/hooks';
 import { setToast } from '@/store/users/usersSlice';
 import { useEffect } from 'react';
 import { Loading } from '@/ui/components/home/_shared/Loading/Loading';
+import { MovieSearchCard } from './MovieSearchCard';
 
 export function MoviePage() {
   const dispatch = useAppDispatch();
-  const { loading, error, data, meta, page, localQuery, setLocalQuery, canSubmit, onSubmitSearch, onRetry, onChangePage } = useMoviePage();
+  const { loading, error, data, meta, page, onRetry, onChangePage } = useMoviePage();
 
   useEffect(() => {
     if (!error) return;
@@ -18,42 +18,9 @@ export function MoviePage() {
 
   return (
     <Stack spacing={3}>
-      <Card sx={{ backgroundColor: 'var(--app-bg-1)', border: '1px solid var(--app-border)' }}>
-        <CardContent>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
-            <Box>
-              <Typography variant="overline" color="primary">
-                Filmes
-              </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                Busque e navegue
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Listagem somente leitura com paginação e busca pelo nome.
-              </Typography>
-            </Box>
-            <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 420 } }}>
-              <TextField
-                fullWidth
-                value={localQuery}
-                onChange={(e) => setLocalQuery(e.target.value)}
-                placeholder="Digite o nome do filme"
-                size="medium"
-              />
-              <Button
-                variant="contained"
-                startIcon={<SearchIcon />}
-                disabled={!canSubmit || loading}
-                onClick={() => {
-                  onSubmitSearch();
-                }}
-              >
-                Buscar
-              </Button>
-            </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
+      <MovieSearchCard
+        
+      />
 
       {error ? (
         <Alert
@@ -71,7 +38,6 @@ export function MoviePage() {
           {error}
         </Alert>
       ) : null}
-
       {loading ? <Loading minHeight="45vh" testId="movies-loading" /> : (
         <Box
           sx={{

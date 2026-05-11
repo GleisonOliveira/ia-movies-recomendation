@@ -28,7 +28,7 @@ export function AppContainer() {
     >
       <Stack direction="row" spacing={3} sx={{ px: { xs: 0, sm: 2 }, alignItems: 'flex-start' }}>
         <SideNav />
-        <Container maxWidth="lg" sx={{ flex: 1 }}>
+        <Container maxWidth={false} sx={{ flex: 1 }}>
           <Stack spacing={4}>
             <Box>
               <Typography variant="overline" color="primary">
