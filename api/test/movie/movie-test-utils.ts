@@ -20,4 +20,3 @@ export function buildMovie(overrides: Partial<Movie> = {}): Movie {
     ...overrides,
   };
 }
-

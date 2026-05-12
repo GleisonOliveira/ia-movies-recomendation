@@ -47,4 +47,27 @@ export class MovieRepository {
 
     return latestMovie?.release_date || null;
   }
+
+  async loadMoviesInChunks(
+    onChunk: (movies: Movie[]) => Promise<void>,
+    chunkSize: number,
+  ): Promise<void> {
+    let skip = 0;
+
+    while (true) {
+      const movies = await this.prismaService.movie.findMany({
+        orderBy: { id: 'asc' },
+        skip,
+        take: chunkSize,
+      });
+
+      if (movies.length === 0) break;
+
+      await onChunk(movies);
+
+      if (movies.length < chunkSize) break;
+
+      skip += chunkSize;
+    }
+  }
 }

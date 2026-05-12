@@ -6,4 +6,3 @@ import { TfjsNodeService } from './tfjs-node.service';
   exports: [TfjsNodeService],
 })
 export class TensorflowModule {}
-

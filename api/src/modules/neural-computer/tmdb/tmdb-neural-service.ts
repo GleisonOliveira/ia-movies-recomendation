@@ -1,60 +1,58 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { NeuralComputerInterface } from '../../../interfaces/neural-computer/neural-computer-interface';
-import { TfjsNodeService } from '@/modules/tensorflow/tfjs-node.service';
-import { Movie } from '@/generatedprisma/client';
 import {
   MovieDataNormalizationService,
-  type MovieNormalizedFeatures,
+  type MovieFeatureAggregates,
 } from '../services/movie-data-normalization.service';
-import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
+import { MovieRepository } from '@/modules/movie/repository/movie-repository/movie-repository';
 
 const CHUNK_SIZE = 200;
 
 @Injectable()
 export class TmdbNeuralService implements NeuralComputerInterface {
+  private readonly logger = new Logger(TmdbNeuralService.name);
+
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly tfjsNodeService: TfjsNodeService,
     private readonly movieDataNormalizationService: MovieDataNormalizationService,
+    private readonly movieRepository: MovieRepository,
   ) {}
 
-  // Exposed for the upcoming steps of embeddings/training.
-  // The current `train` method is still a stub, so this is used by tests and future integration.
-  getMovieNormalizedFeatures(movie: Movie): MovieNormalizedFeatures {
-    return this.movieDataNormalizationService.normalizeMovieFeatures(movie);
-  }
-
-  async train(data: Movie[]): Promise<void> {
-    this.tfjsNodeService.tf.data.generator();
-
+  async train(): Promise<void> {
     try {
-      let skip = 0;
-
-      while (true) {
-        const movies = await this.prismaService.movie.findMany({
-          orderBy: { id: 'asc' },
-          skip,
-          take: CHUNK_SIZE,
-        });
-
-        if (movies.length === 0) {
-          break;
-        }
-
-        await this.#trainMovies(movies);
-
-        if (movies.length < CHUNK_SIZE) {
-          break;
-        }
-
-        skip += CHUNK_SIZE;
-      }
+      const aggregates = await this.#fitMovieFeatureAggregates();
+      await this.#iterateAndNormalizeMovies(aggregates);
     } catch (error) {
       this.logger.error(error);
     }
+  }
 
-    this.tfjsNodeService.tf.data.generator();
-    void data;
-    void this.tfjsNodeService.tf;
+  #fitMovieFeatureAggregates(): Promise<MovieFeatureAggregates> {
+    const agg =
+      this.movieDataNormalizationService.createEmptyMovieFeatureAggregates();
+
+    return this.movieRepository
+      .loadMoviesInChunks(async (movies) => {
+        for (const movie of movies) {
+          this.movieDataNormalizationService.updateMovieFeatureAggregates(
+            agg,
+            movie,
+          );
+        }
+
+        return Promise.resolve();
+      }, CHUNK_SIZE)
+      .then(() =>
+        this.movieDataNormalizationService.finalizeMovieFeatureAggregates(agg),
+      );
+  }
+
+  #iterateAndNormalizeMovies(agg: MovieFeatureAggregates): Promise<void> {
+    return this.movieRepository.loadMoviesInChunks((movies) => {
+      for (const movie of movies) {
+        this.movieDataNormalizationService.normalizeMovieForTensor(movie, agg);
+      }
+
+      return Promise.resolve();
+    }, CHUNK_SIZE);
   }
 }

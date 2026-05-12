@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MovieRepository } from './movie-repository';
 import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
 import { ListMoviesDto } from '../../dto/list.movies.dto';
-import { Prisma } from '@/generatedprisma/client';
+import { Movie, Prisma } from '@/generatedprisma/client';
 import type {
   MovieCountResult,
   MovieCreateResult,
@@ -118,6 +118,87 @@ describe('MovieRepository', () => {
     expect(prismaService.movie.findFirst).toHaveBeenCalledWith({
       orderBy: { release_date: 'desc' },
       select: { release_date: true },
+    });
+  });
+
+  describe('loadMoviesInChunks', () => {
+    it('should load a single chunk when remaining movies are fewer than chunkSize', async () => {
+      const chunkSize = 3;
+      const movies = [
+        buildMovie({ id: 1, title: 'M1' }),
+        buildMovie({ id: 2, title: 'M2' }),
+      ];
+
+      prismaService.movie.findMany.mockResolvedValueOnce(movies);
+
+      const onChunk = jest
+        .fn<Promise<void>, [typeof movies]>()
+        .mockResolvedValue(undefined as void);
+
+      await expect(
+        repository.loadMoviesInChunks(onChunk, chunkSize),
+      ).resolves.toBeUndefined();
+
+      expect(prismaService.movie.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaService.movie.findMany).toHaveBeenCalledWith({
+        orderBy: { id: 'asc' },
+        skip: 0,
+        take: chunkSize,
+      });
+      expect(onChunk).toHaveBeenCalledTimes(1);
+      expect(onChunk).toHaveBeenCalledWith(movies);
+    });
+
+    it('should load multiple chunks and advance skip correctly', async () => {
+      const chunkSize = 2;
+      const chunk1 = [
+        buildMovie({ id: 1, title: 'M1' }),
+        buildMovie({ id: 2, title: 'M2' }),
+      ];
+      const chunk2 = [buildMovie({ id: 3, title: 'M3' })];
+
+      prismaService.movie.findMany
+        .mockResolvedValueOnce(chunk1)
+        .mockResolvedValueOnce(chunk2);
+
+      const onChunk = jest
+        .fn<Promise<void>, [Movie[]]>()
+        .mockResolvedValue(undefined as void);
+
+      await expect(
+        repository.loadMoviesInChunks(onChunk, chunkSize),
+      ).resolves.toBeUndefined();
+
+      expect(prismaService.movie.findMany).toHaveBeenCalledTimes(2);
+      expect(prismaService.movie.findMany).toHaveBeenNthCalledWith(1, {
+        orderBy: { id: 'asc' },
+        skip: 0,
+        take: chunkSize,
+      });
+      expect(prismaService.movie.findMany).toHaveBeenNthCalledWith(2, {
+        orderBy: { id: 'asc' },
+        skip: chunkSize,
+        take: chunkSize,
+      });
+
+      expect(onChunk).toHaveBeenCalledTimes(2);
+      expect(onChunk).toHaveBeenNthCalledWith(1, chunk1);
+      expect(onChunk).toHaveBeenNthCalledWith(2, chunk2);
+    });
+
+    it('should propagate errors from onChunk', async () => {
+      const chunkSize = 2;
+      const movies = [buildMovie({ id: 1, title: 'M1' })];
+
+      prismaService.movie.findMany.mockResolvedValueOnce(movies);
+      const onChunk = jest.fn().mockRejectedValue(new Error('boom'));
+
+      await expect(
+        repository.loadMoviesInChunks(onChunk, chunkSize),
+      ).rejects.toThrow('boom');
+
+      expect(onChunk).toHaveBeenCalledTimes(1);
+      expect(onChunk).toHaveBeenCalledWith(movies);
     });
   });
 });
