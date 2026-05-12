@@ -4,7 +4,7 @@ import { PrismaService } from '../../prisma/prisma-service/prisma-service';
 import { UserRepository } from './user-repository';
 import { ListUserDto } from '../dto/list.user.dto';
 import { ListUserMoviesDto } from '../dto/list-user-movies.dto';
-import { type Movie } from '@/generatedprisma/client';
+import { type Movie, type User } from '@/generatedprisma/client';
 import { Prisma } from '@/generatedprisma/client';
 import { buildMovie } from '../../../../test/movie/movie-test-utils';
 import { buildUser } from '../../../../test/user/user-test-utils';
@@ -21,8 +21,6 @@ import {
   type MovieFindManyResult,
   type MovieFindUniqueResult,
 } from '../../../../test/user/user-repository-test-types';
-
-// types are centralized in `api/test/user/user-test-types`
 
 describe('UserRepository', () => {
   let repository: UserRepository;
@@ -302,6 +300,87 @@ describe('UserRepository', () => {
           in: [2],
         },
       },
+    });
+  });
+
+  describe('loadUsersInChunks', () => {
+    it('should load all users in a single chunk when users count is less than chunkSize', async () => {
+      const users = [
+        { ...buildUser({ id: 1 }), movies: [] },
+        { ...buildUser({ id: 2 }), movies: [] },
+      ];
+      prismaService.user.findMany.mockResolvedValue(users);
+
+      const chunks: User[][] = [];
+      await repository.loadUsersInChunks(async (chunk) => {
+        chunks.push(chunk);
+
+        await Promise.resolve();
+      }, 10);
+
+      expect(chunks).toEqual([users]);
+      expect(prismaService.user.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaService.user.findMany).toHaveBeenCalledWith({
+        orderBy: { id: 'asc' },
+        skip: 0,
+        take: 10,
+      });
+    });
+
+    it('should load users in multiple chunks when users count exceeds chunkSize', async () => {
+      const users1 = [
+        { ...buildUser({ id: 1 }), movies: [] },
+        { ...buildUser({ id: 2 }), movies: [] },
+      ];
+      const users2 = [
+        { ...buildUser({ id: 3 }), movies: [] },
+        { ...buildUser({ id: 4 }), movies: [] },
+      ];
+      const users3 = [{ ...buildUser({ id: 5 }), movies: [] }];
+
+      prismaService.user.findMany
+        .mockResolvedValueOnce(users1)
+        .mockResolvedValueOnce(users2)
+        .mockResolvedValueOnce(users3);
+
+      const chunks: User[][] = [];
+      await repository.loadUsersInChunks(async (chunk) => {
+        chunks.push(chunk);
+
+        await Promise.resolve();
+      }, 2);
+
+      expect(chunks).toEqual([users1, users2, users3]);
+      expect(prismaService.user.findMany).toHaveBeenCalledTimes(3);
+      expect(prismaService.user.findMany).toHaveBeenNthCalledWith(1, {
+        orderBy: { id: 'asc' },
+        skip: 0,
+        take: 2,
+      });
+      expect(prismaService.user.findMany).toHaveBeenNthCalledWith(2, {
+        orderBy: { id: 'asc' },
+        skip: 2,
+        take: 2,
+      });
+      expect(prismaService.user.findMany).toHaveBeenNthCalledWith(3, {
+        orderBy: { id: 'asc' },
+        skip: 4,
+        take: 2,
+      });
+    });
+
+    it('should not call onChunk when no users exist', async () => {
+      prismaService.user.findMany.mockResolvedValue([]);
+
+      const chunks: User[][] = [];
+      await repository.loadUsersInChunks(async (chunk) => {
+        chunks.push(chunk);
+
+        await Promise.resolve();
+      }, 10);
+
+      expect(chunks).toEqual([]);
+      expect(prismaService.user.findMany).toHaveBeenCalledTimes(1);
     });
   });
 });

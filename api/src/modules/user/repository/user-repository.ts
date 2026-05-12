@@ -3,7 +3,7 @@ import { createPaginator } from 'prisma-pagination';
 import { ListUserDto } from '../dto/list.user.dto';
 import { ListUserMoviesDto } from '../dto/list-user-movies.dto';
 import { PrismaService } from '../../prisma/prisma-service/prisma-service';
-import { UserMovie, Prisma } from '@/generatedprisma/client';
+import { UserMovie, Prisma, User } from '@/generatedprisma/client';
 
 @Injectable()
 export class UserRepository {
@@ -133,6 +133,38 @@ export class UserRepository {
         },
       }),
     };
+  }
+
+  async loadUsersInChunks(
+    onChunk: (users: User[]) => Promise<void>,
+    chunkSize: number,
+  ): Promise<void> {
+    let skip = 0;
+
+    while (true) {
+      const users = await this.prismaService.user.findMany({
+        orderBy: { id: 'asc' },
+        skip,
+        take: chunkSize,
+      });
+
+      if (users.length === 0) break;
+
+      await onChunk(users);
+
+      if (users.length < chunkSize) break;
+
+      skip += chunkSize;
+    }
+  }
+
+  async getAllInteractions(): Promise<{ user_id: number; movie_id: number }[]> {
+    return this.prismaService.userMovie.findMany({
+      select: {
+        user_id: true,
+        movie_id: true,
+      },
+    });
   }
 
   private async ensureUserExists(userId: number) {
