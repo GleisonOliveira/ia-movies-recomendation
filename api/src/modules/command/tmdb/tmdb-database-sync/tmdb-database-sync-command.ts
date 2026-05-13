@@ -10,7 +10,7 @@ import { TmdbMoviesRequestInterface } from '@/interfaces/recomendation-service/t
 @Injectable()
 @Command({
   name: 'tmdb-database-sync',
-  description: 'Populate tmdb vectors',
+  description: 'Sync tmdb database',
 })
 export class TmdbDatabaseSyncCommand extends CommandRunner {
   private readonly logger = new Logger(TmdbDatabaseSyncCommand.name);

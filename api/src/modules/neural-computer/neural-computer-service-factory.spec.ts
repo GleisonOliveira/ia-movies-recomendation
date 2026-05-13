@@ -3,6 +3,9 @@ import { NeuralComputerServiceFactory } from './neural-computer-service-factory'
 import { TmdbNeuralService } from './tmdb/tmdb-neural-service';
 import { TfjsNodeService } from '@/modules/tensorflow/tfjs-node.service';
 import { MovieDataNormalizationService } from './services/movie-data-normalization.service';
+import { UserDataNormalizationService } from './services/user-data-normalization.service';
+import { MovieRepository } from '@/modules/movie/repository/movie-repository/movie-repository';
+import { UserRepository } from '@/modules/user/repository/user-repository';
 
 describe('NeuralComputerServiceFactory', () => {
   let factory: NeuralComputerServiceFactory;
@@ -17,6 +20,22 @@ describe('NeuralComputerServiceFactory', () => {
         {
           provide: MovieDataNormalizationService,
           useValue: { normalizeMovieFeatures: jest.fn() },
+        },
+        {
+          provide: UserDataNormalizationService,
+          useValue: {},
+        },
+        {
+          provide: MovieRepository,
+          useValue: {
+            loadMoviesInChunks: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: UserRepository,
+          useValue: {
+            loadUsersInChunks: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();

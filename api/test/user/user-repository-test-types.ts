@@ -1,9 +1,4 @@
-import {
-  type Movie,
-  type User,
-  type UserMovie,
-  Prisma,
-} from '@/generatedprisma/client';
+import type { Movie, User, UserMovie, Prisma } from '@/generatedprisma/client';
 
 export type UserWithMoviesPayload = Prisma.UserGetPayload<{
   include: { movies: { include: { movie: true } } };
@@ -28,3 +23,6 @@ export type UserMovieCreateWithRelationsPayload = Prisma.UserMovieGetPayload<{
 
 export type UserMovieCreateResult =
   Promise<UserMovieCreateWithRelationsPayload>;
+
+export type MovieFindManyArgs = Prisma.MovieFindManyArgs;
+export type UserFindManyArgs = Prisma.UserFindManyArgs;
