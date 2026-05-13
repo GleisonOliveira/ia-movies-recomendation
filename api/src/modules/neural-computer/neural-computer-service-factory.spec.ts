@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NeuralComputerServiceFactory } from './neural-computer-service-factory';
 import { TmdbNeuralService } from './tmdb/tmdb-neural-service';
 import { TfjsNodeService } from '@/modules/tensorflow/tfjs-node.service';
-import { MovieDataNormalizationService } from './services/movie-data-normalization.service';
-import { UserDataNormalizationService } from './services/user-data-normalization.service';
+import { MovieDataNormalizationService } from './services/normalizers/movie-data-normalization.service';
+import { UserDataNormalizationService } from './services/normalizers/user-data-normalization.service';
 import { MovieRepository } from '@/modules/movie/repository/movie-repository/movie-repository';
 import { UserRepository } from '@/modules/user/repository/user-repository';
 

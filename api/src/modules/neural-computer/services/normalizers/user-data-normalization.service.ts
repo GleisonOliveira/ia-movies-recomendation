@@ -1,20 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@/generatedprisma/client';
-
-export type UserRawFeatures = {
-  user_id: number;
-  age: number;
-};
-
-export type UserFeatureAggregates = {
-  ageMin: number;
-  ageMax: number;
-};
-
-export type UserTensorFeatures = {
-  user_id: number;
-  age: number;
-};
+import {
+  type UserFeatureAggregates,
+  type UserTensorFeatures,
+  type UserRawFeatures,
+} from '../types';
 
 @Injectable()
 export class UserDataNormalizationService {
