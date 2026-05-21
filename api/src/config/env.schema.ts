@@ -18,6 +18,7 @@ export const envSchema = z.object({
   NEO4J_DATABASE: z.string().min(1).default('neo4j'),
   NEO4J_USER: z.string().min(1),
   NEO4J_PASSWORD: z.string().min(1),
+  MODEL_PATH: z.string().min(1),
 });
 
 export type EnvSchema = z.infer<typeof envSchema>;

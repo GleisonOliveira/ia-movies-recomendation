@@ -1,14 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { LayersModel } from '@tensorflow/tfjs-layers';
+import type { Logs } from '@tensorflow/tfjs-layers/dist/logs';
+import type { Tensor2D } from '@tensorflow/tfjs-core';
 import { NeuralComputerInterface } from '../../../interfaces/neural-computer/neural-computer-interface';
 import { MovieDataNormalizationService } from '../services/normalizers/movie-data-normalization.service';
 import { UserDataNormalizationService } from '../services/normalizers/user-data-normalization.service';
-import { MovieRepository } from '@/modules/movie/repository/movie-repository/movie-repository';
 import { UserRepository } from '@/modules/user/repository/user-repository';
 import { TfjsNodeService } from '@/modules/tensorflow/tfjs-node.service';
 import { Movie } from '@/generatedprisma/client';
 import { User } from '@/generatedprisma/client';
 import { mkdir } from 'fs/promises';
-import { resolve } from 'path';
 import { MovieCollectionService } from '../services/collectors/movie-collection.service';
 import { UserCollectionService } from '../services/collectors/user-collection.service';
 import {
@@ -18,21 +20,22 @@ import {
   type UserTensorFeatures,
 } from '../services/types';
 
-const MODEL_PATH = resolve(__dirname, '../../../../models/affinity');
-
 @Injectable()
 export class TmdbNeuralService implements NeuralComputerInterface {
   private readonly logger = new Logger(TmdbNeuralService.name);
+  private readonly modelPath: string;
 
   constructor(
     private readonly movieDataNormalizationService: MovieDataNormalizationService,
     private readonly userDataNormalizationService: UserDataNormalizationService,
-    private readonly movieRepository: MovieRepository,
     private readonly userRepository: UserRepository,
     private readonly tfjsNodeService: TfjsNodeService,
     private readonly movieCollectionService: MovieCollectionService,
     private readonly userCollectionService: UserCollectionService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.modelPath = this.configService.getOrThrow<string>('MODEL_PATH');
+  }
 
   async train(): Promise<void> {
     try {
@@ -62,7 +65,7 @@ export class TmdbNeuralService implements NeuralComputerInterface {
 
       this.logger.log(`Loaded ${interactions.length} user-movie interactions`);
 
-      const { features, labels } = this.#buildTrainingDataset(
+      const { features, labels, featureDim } = this.#buildTrainingDataset(
         interactions,
         userFeaturesMap,
         movieFeaturesMap,
@@ -79,7 +82,7 @@ export class TmdbNeuralService implements NeuralComputerInterface {
         `Training dataset built: ${features.shape[0]} examples, feature dim ${features.shape[1]}`,
       );
 
-      const model = this.#createModel();
+      const model = this.#createModel(featureDim);
       await this.#trainModel(model, features, labels);
 
       await this.#saveModel(model);
@@ -90,6 +93,7 @@ export class TmdbNeuralService implements NeuralComputerInterface {
     }
   }
 
+  // Itera sobre todos os filmes carregados em memória e normaliza suas features para o formato tensor, retornando um Map indexado pelo ID do filme.
   #normalizeMoviesFromMemory(
     movies: Movie[],
     agg: MovieFeatureAggregates,
@@ -108,6 +112,7 @@ export class TmdbNeuralService implements NeuralComputerInterface {
     return featuresMap;
   }
 
+  // Itera sobre todos os usuários carregados em memória e normaliza suas features para o formato tensor, retornando um Map indexado pelo ID do usuário.
   #normalizeUsersFromMemory(
     users: User[],
     agg: UserFeatureAggregates,
@@ -146,7 +151,7 @@ export class TmdbNeuralService implements NeuralComputerInterface {
     // All movie IDs for negative sampling
     const allMovieIds = Array.from(movieFeaturesMap.keys());
 
-    const featureVectors: number[] = [];
+    const featureVectors: number[][] = [];
     const labelValues: number[] = [];
 
     for (const { user_id, movie_id } of interactions) {
@@ -166,15 +171,20 @@ export class TmdbNeuralService implements NeuralComputerInterface {
       featureVectors.push(featureVector);
       labelValues.push(1); // positive interaction
 
-      // Negative sample: random movie not watched by this user
+      // Amostragem negativa: para cada interação positiva (label=1), gera uma negativa (label=0).
+      // Pega o set de filmes que o usuário já assistiu, filtra do catálogo completo
+      // e sorteia 1 filme aleatório que ele nunca viu. Ratio 1:1 positivo/negativo
+      // garante que o modelo aprenda o contraste entre "gosta" e "não assistiu".
       const watched = userMoviesMap.get(user_id)!;
       const unwatchedMovies = allMovieIds.filter((id) => !watched.has(id));
+
       if (unwatchedMovies.length > 0) {
         const randomNegativeMovieId =
           unwatchedMovies[Math.floor(Math.random() * unwatchedMovies.length)];
         const negativeMovieFeatures = movieFeaturesMap.get(
           randomNegativeMovieId,
         );
+
         if (negativeMovieFeatures) {
           featureVectors.push([
             userFeatures.age,
@@ -188,27 +198,27 @@ export class TmdbNeuralService implements NeuralComputerInterface {
       }
     }
 
+    const featureDim = featureVectors[0]?.length ?? 0;
     const featuresTensor = tf.tensor2d(featureVectors, [
       featureVectors.length,
-      5,
+      featureDim,
     ]);
     const labelsTensor = tf.tensor2d(labelValues, [labelValues.length, 1]);
 
-    return { features: featuresTensor, labels: labelsTensor };
+    return { features: featuresTensor, labels: labelsTensor, featureDim };
   }
 
-  #createModel() {
+  #createModel(featureDim: number) {
     const { tf } = this.tfjsNodeService;
 
     const model = tf.sequential();
 
-    // Input: 5 features
     // Hidden layer: 16 neurons, ReLU
     model.add(
       tf.layers.dense({
         units: 16,
         activation: 'relu',
-        inputShape: [5],
+        inputShape: [featureDim],
       }),
     );
 
@@ -229,9 +239,11 @@ export class TmdbNeuralService implements NeuralComputerInterface {
     return model;
   }
 
-  async #trainModel(model: any, features: any, labels: any): Promise<void> {
-    const { tf } = this.tfjsNodeService;
-
+  async #trainModel(
+    model: LayersModel,
+    features: Tensor2D,
+    labels: Tensor2D,
+  ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       model
         .fit(features, labels, {
@@ -239,28 +251,25 @@ export class TmdbNeuralService implements NeuralComputerInterface {
           batchSize: 32,
           validationSplit: 0.2,
           callbacks: {
-            onEpochEnd: (epoch, logs) => {
+            onEpochEnd: (epoch: number, logs?: Logs) => {
               this.logger.log(
-                `Epoch ${epoch + 1}: loss = ${logs?.loss.toFixed(4)}, acc = ${logs?.acc.toFixed(4)}`,
+                `Epoch ${epoch + 1}: loss = ${logs?.['loss']?.toFixed(4)}, acc = ${logs?.['acc']?.toFixed(4)}`,
               );
             },
           },
         })
         .then(() => {
-          // Clean up tensors
           features.dispose();
           labels.dispose();
           resolve();
         })
-        .catch((err) => reject(err));
+        .catch((err: Error) => reject(err));
     });
   }
 
-  async #saveModel(model: any): Promise<void> {
-    const { tf } = this.tfjsNodeService;
-
-    await mkdir(MODEL_PATH, { recursive: true });
-    await model.save(`file://${MODEL_PATH}`);
-    this.logger.log(`Model saved to ${MODEL_PATH}`);
+  async #saveModel(model: LayersModel): Promise<void> {
+    await mkdir(this.modelPath, { recursive: true });
+    await model.save(`file://${this.modelPath}`);
+    this.logger.log(`Model saved to ${this.modelPath}`);
   }
 }

@@ -6,23 +6,15 @@ import { MovieModule } from '../movie/movie.module';
 import { ConnectorsModule } from '../connectors/connectors.module';
 import { MovieNeuralTrainCommand } from './movie/movie-neural-train/movie-neural-train-command';
 import { PrismaService } from '../prisma/prisma-service/prisma-service';
-import { TmdbNeuralService } from '../neural-computer/tmdb/tmdb-neural-service';
-import { NeuralComputerServiceFactory } from '../neural-computer/neural-computer-service-factory';
-import { TensorflowModule } from '@/modules/tensorflow/tensorflow.module';
+import { NeuralComputerModule } from '../neural-computer/neural-computer.module';
 
 @Module({
-  imports: [HttpModule, MovieModule, ConnectorsModule, TensorflowModule],
+  imports: [HttpModule, MovieModule, ConnectorsModule, NeuralComputerModule],
   providers: [
     TmdbDatabaseSyncCommand,
     MovieNeuralTrainCommand,
     TmdbConnector,
     PrismaService,
-    TmdbNeuralService,
-    NeuralComputerServiceFactory,
-    {
-      provide: 'NeuralComputerFactoryServiceInterface',
-      useExisting: NeuralComputerServiceFactory,
-    },
   ],
 })
 export class CommandModule {}

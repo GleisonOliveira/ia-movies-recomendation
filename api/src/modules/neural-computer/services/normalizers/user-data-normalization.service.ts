@@ -8,6 +8,7 @@ import {
 
 @Injectable()
 export class UserDataNormalizationService {
+  // Extrai apenas os campos relevantes do usuário (id e age) para uso interno na normalização.
   #getUserFields(user: User): UserRawFeatures {
     return {
       user_id: user.id,
@@ -15,6 +16,7 @@ export class UserDataNormalizationService {
     };
   }
 
+  // Cria um objeto inicial de agregados de features do usuário com valores nulos, usado como ponto de partida antes de processar qualquer usuário.
   createEmptyUserFeatureAggregates(): {
     ageMin: number | null;
     ageMax: number | null;
@@ -25,6 +27,7 @@ export class UserDataNormalizationService {
     };
   }
 
+  // Atualiza os valores mínimo e máximo de idade nos agregados com base no usuário fornecido. Deve ser chamado para cada usuário durante o carregamento em chunks.
   updateUserFeatureAggregates(
     agg: ReturnType<
       UserDataNormalizationService['createEmptyUserFeatureAggregates']
@@ -37,6 +40,7 @@ export class UserDataNormalizationService {
     agg.ageMax = agg.ageMax === null ? age : Math.max(agg.ageMax, age);
   }
 
+  // Converte os agregados parciais (com possíveis nulos) em aggregates finais prontos para normalização, substituindo nulos por 0.
   finalizeUserFeatureAggregates(
     agg: ReturnType<
       UserDataNormalizationService['createEmptyUserFeatureAggregates']
@@ -48,6 +52,7 @@ export class UserDataNormalizationService {
     };
   }
 
+  // Normaliza os dados brutos do usuário para o intervalo [0, 1] usando min-max scaling, retornando as features no formato esperado pelo tensor de treinamento.
   normalizeUserForTensor(
     user: User,
     aggregates: UserFeatureAggregates,

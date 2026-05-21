@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MovieModule } from '@/modules/movie/movie.module';
 import { TmdbNeuralService } from './tmdb/tmdb-neural-service';
 import { NeuralComputerServiceFactory } from './neural-computer-service-factory';
 import { TensorflowModule } from '@/modules/tensorflow/tensorflow.module';
@@ -11,16 +12,23 @@ import { MovieCollectionService } from './services/collectors/movie-collection.s
 import { UserCollectionService } from './services/collectors/user-collection.service';
 
 @Module({
-  imports: [TensorflowModule, Neo4jModule, UserModule],
+  imports: [TensorflowModule, Neo4jModule, UserModule, MovieModule],
   providers: [
     TmdbNeuralService,
     NeuralComputerServiceFactory,
+    {
+      provide: 'NeuralComputerFactoryServiceInterface',
+      useExisting: NeuralComputerServiceFactory,
+    },
     MovieDataNormalizationService,
     UserDataNormalizationService,
     MovieCollectionService,
     UserCollectionService,
     Neo4jService,
   ],
-  exports: [NeuralComputerServiceFactory],
+  exports: [
+    NeuralComputerServiceFactory,
+    'NeuralComputerFactoryServiceInterface',
+  ],
 })
 export class NeuralComputerModule {}
