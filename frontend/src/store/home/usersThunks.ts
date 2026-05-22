@@ -84,14 +84,22 @@ export const searchMovies = createAsyncThunk(
   },
 );
 
+export const loadRecommendations = createAsyncThunk(
+  'home/loadRecommendations',
+  async (userId: number) => {
+    const result = await container.userService.getRecommendations(userId);
+    return result.data;
+  },
+);
+
 export const addMovieToUser = createAsyncThunk(
   'home/addMovieToUser',
-  async (args: { userId: number; movie: Movie }) => {
+  async (args: { userId: number; movie: Movie; perPage?: number }) => {
     const user = await container.userService.addMovieToUser({
       user_id: args.userId,
       movie_id: args.movie.id,
     });
-    return { user, movie: args.movie };
+    return { user, movie: args.movie, perPage: args.perPage ?? 6 };
   },
 );
 

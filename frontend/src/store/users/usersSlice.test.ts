@@ -116,6 +116,7 @@ describe('homeSlice', () => {
       options: [],
       loading: false,
       selected: null,
+      recommendations: { loading: false, data: [] },
     });
   });
 
@@ -352,6 +353,108 @@ describe('homeSlice', () => {
       expect(latest[0]!.id).toBe(7);
       expect(store.getState().home.toast.severity).toBe('success');
       expect(store.getState().home.toast.open).toBe(true);
+    });
+
+    it('addMovieToUser.fulfilled updates userMovies drawer data without endpoint call', async () => {
+      const { userService } = getMockContainer();
+      const movie: Movie = buildMovie({ id: 7 });
+      const user: User = buildUser({ id: 9, latest_movies: [] });
+      userService.addMovieToUser.mockResolvedValue(user);
+
+      const store = mkStore();
+      store.dispatch({
+        type: 'home/loadUsers/fulfilled',
+        payload: { data: [user], meta: null },
+      });
+      // Preload drawer with existing movies
+      store.dispatch({
+        type: 'home/loadUserMovies/fulfilled',
+        payload: {
+          data: [buildMovie({ id: 1 }), buildMovie({ id: 2 })],
+          meta: { total: 2, last_page: 1, current_page: 1, per_page: 6, prev: null, next: null },
+        },
+      });
+
+      await store.dispatch(addMovieToUser({ userId: 9, movie, perPage: 6 }));
+
+      const drawerData = store.getState().home.movieState.userMovies.data;
+      expect(drawerData[0]?.id).toBe(7);
+      expect(drawerData).toHaveLength(3);
+      const meta = store.getState().home.movieState.userMovies.meta;
+      expect(meta?.total).toBe(3);
+      // getMoviesByUserId should NOT have been called
+      expect(userService.getMoviesByUserId).not.toHaveBeenCalled();
+    });
+
+    it('addMovieToUser.fulfilled removes movie from recommendations', async () => {
+      const { userService } = getMockContainer();
+      const movie: Movie = buildMovie({ id: 7 });
+      const user: User = buildUser({ id: 9, latest_movies: [] });
+      userService.addMovieToUser.mockResolvedValue(user);
+
+      const store = mkStore();
+      store.dispatch({
+        type: 'home/loadUsers/fulfilled',
+        payload: { data: [user], meta: null },
+      });
+      store.dispatch({
+        type: 'home/loadRecommendations/fulfilled',
+        payload: [movie, buildMovie({ id: 8 })],
+      });
+
+      await store.dispatch(addMovieToUser({ userId: 9, movie, perPage: 6 }));
+
+      const recs = store.getState().home.movieState.recommendations.data;
+      expect(recs).toHaveLength(1);
+      expect(recs[0]?.id).toBe(8);
+    });
+
+    it('addMovieToUser.rejected shows toast and does not update drawer', async () => {
+      const { userService } = getMockContainer();
+      const movie: Movie = buildMovie({ id: 7 });
+      userService.addMovieToUser.mockRejectedValue(new Error('Network error'));
+
+      const store = mkStore();
+      store.dispatch({
+        type: 'home/loadUserMovies/fulfilled',
+        payload: {
+          data: [buildMovie({ id: 1 })],
+          meta: { total: 1, last_page: 1, current_page: 1, per_page: 6, prev: null, next: null },
+        },
+      });
+
+      await store.dispatch(addMovieToUser({ userId: 9, movie, perPage: 6 }));
+
+      expect(store.getState().home.toast.open).toBe(true);
+      expect(store.getState().home.toast.severity).toBe('error');
+      // drawer not changed
+      expect(store.getState().home.movieState.userMovies.data).toHaveLength(1);
+      expect(store.getState().home.movieState.userMovies.data[0]?.id).toBe(1);
+    });
+
+    it('loadRecommendations.fulfilled updates recommendations.data via action payload', () => {
+      const movie: Movie = buildMovie({ id: 42 });
+      const store = mkStore();
+
+      store.dispatch({
+        type: 'home/loadRecommendations/fulfilled',
+        payload: [movie],
+      });
+
+      expect(store.getState().home.movieState.recommendations.data).toHaveLength(1);
+      expect(store.getState().home.movieState.recommendations.data[0]?.id).toBe(42);
+      expect(store.getState().home.movieState.recommendations.loading).toBe(false);
+    });
+
+    it('loadRecommendations.rejected sets data to [] and loading to false', () => {
+      const store = mkStore();
+      store.dispatch({ type: 'home/loadRecommendations/pending' });
+      expect(store.getState().home.movieState.recommendations.loading).toBe(true);
+
+      store.dispatch({ type: 'home/loadRecommendations/rejected', error: { message: 'fail' } });
+
+      expect(store.getState().home.movieState.recommendations.loading).toBe(false);
+      expect(store.getState().home.movieState.recommendations.data).toHaveLength(0);
     });
 
     it('removeMovieFromUser.fulfilled removes latest_movies by meta.arg and uses original meta', async () => {

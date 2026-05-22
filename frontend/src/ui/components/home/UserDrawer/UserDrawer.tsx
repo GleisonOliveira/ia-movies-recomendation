@@ -1,6 +1,7 @@
 import { Alert, Box, Button, Drawer, Pagination, Stack, Typography } from '@mui/material';
 import { useMovieHome } from './useMovieHome';
 import { MovieCard } from '../MovieCard/MovieCard';
+import { MovieCardAdd } from '../MovieCardAdd/MovieCardAdd';
 import { MovieSearch } from '../MovieSearch/MovieSearch';
 import { Loading } from '../_shared/Loading/Loading';
 
@@ -10,8 +11,19 @@ export function UserDrawer() {
     drawerOpen,
     movieActions,
   } = useMovieHome();
-  const { closeDrawer, setUserMoviesPage, removeMovieFromUser, handleMovieQueryChange, setSelectedMovieOption, addMovieToUser } = movieActions;
-  const { userMovies, userMoviesPage, query, options, loading, selected } = movieState;
+  const { closeDrawer, setUserMoviesPage, removeMovieFromUser, handleMovieQueryChange, setSelectedMovieOption, addMovieToUser, addRecommendedMovie } = movieActions;
+  const { userMovies, userMoviesPage, query, options, loading, selected, recommendations } = movieState;
+
+  const movieGridSx = {
+    display: 'grid',
+    gap: 1.25,
+    gridTemplateColumns: {
+      xs: 'repeat(2, minmax(0, 1fr))',
+      sm: 'repeat(3, minmax(0, 1fr))',
+      md: 'repeat(4, minmax(0, 1fr))',
+      xl: 'repeat(6, minmax(0, 1fr))',
+    },
+  };
 
   return (
     <Drawer anchor="right" open={drawerOpen} onClose={closeDrawer}>
@@ -36,24 +48,30 @@ export function UserDrawer() {
             }}
           />
 
+          {recommendations.loading || recommendations.data.length > 0 ? (
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Recomendações
+              </Typography>
+              {recommendations.loading ? (
+                <Loading minHeight="12vh" testId="recommendations-loading" />
+              ) : (
+                <Box sx={movieGridSx}>
+                  {recommendations.data.map((movie) => (
+                    <MovieCardAdd key={movie.id} movie={movie} onAdd={addRecommendedMovie} />
+                  ))}
+                </Box>
+              )}
+            </Box>
+          ) : null}
+
           <Box>
             <Typography variant="subtitle1" gutterBottom>
               Filmes associados
             </Typography>
             {userMovies.loading ? <Loading minHeight="18vh" testId="user-movies-loading" /> : null}
             {userMovies.error ? <Alert severity="error">{userMovies.error}</Alert> : null}
-            <Box
-              sx={{
-                display: 'grid',
-                gap: 1.25,
-                gridTemplateColumns: {
-                  xs: 'repeat(2, minmax(0, 1fr))',
-                  sm: 'repeat(3, minmax(0, 1fr))',
-                  md: 'repeat(4, minmax(0, 1fr))',
-                  xl: 'repeat(6, minmax(0, 1fr))',
-                },
-              }}
-            >
+            <Box sx={movieGridSx}>
               {userMovies.data.map((movie) => (
                 <MovieCard key={movie.id} movie={movie} onRemove={removeMovieFromUser} />
               ))}

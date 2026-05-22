@@ -90,3 +90,63 @@ rtk npm run dev -- --host 0.0.0.0
 
 - Frontend: `http://localhost:5173`
 
+## Documentação da API (Swagger)
+
+Com a API rodando, acesse: `http://localhost:3000/docs`
+
+## Comandos do Backend (CLI)
+
+Os comandos são executados via `nest-commander` dentro do diretório `api/`.
+
+### Sincronizar filmes do TMDB
+
+Busca filmes da API do TMDB e persiste no Postgres. Só insere filmes ainda não existentes; usa a data de lançamento mais recente no banco como ponto de partida.
+
+```bash
+cd api
+npm run command:tmdb-database-sync
+```
+
+### Treinar modelo neural
+
+Treina o modelo de recomendação (Two Tower) com os filmes do banco de dados.
+
+```bash
+cd api
+npm run command:movie-neural-train
+```
+
+### Gerar embeddings de filmes
+
+Gera e armazena os embeddings dos filmes usando o encoder treinado. Deve ser executado **após** o treinamento (`command:movie-neural-train`).
+
+```bash
+cd api
+npm run command:movie-neural-embed
+```
+
+### Fluxo recomendado (primeira execução)
+
+```bash
+cd api
+npm run command:tmdb-database-sync   # 1. Popula banco com filmes do TMDB
+npm run command:movie-neural-train   # 2. Treina o modelo
+npm run command:movie-neural-embed   # 3. Gera embeddings para recomendação
+```
+
+## Outros scripts do Backend
+
+| Script | Descrição |
+|--------|-----------|
+| `npm run build` | Compila o projeto |
+| `npm run start` | Inicia em produção (requer build) |
+| `npm run start:dev` | Inicia com watch + debug na porta `9229` |
+| `npm run start:prod` | Inicia via `dist/main` |
+| `npm run test` | Roda testes unitários |
+| `npm run test:watch` | Testes em modo watch |
+| `npm run test:cov` | Testes com cobertura |
+| `npm run test:e2e` | Testes end-to-end |
+| `npm run lint` | Lint + auto-fix |
+| `npm run typecheck` | Verificação de tipos sem emitir arquivos |
+| `npm run prisma-migrate-dev` | Cria e aplica migration (`init`) |
+| `npm run prisma-generate` | Gera o Prisma Client |

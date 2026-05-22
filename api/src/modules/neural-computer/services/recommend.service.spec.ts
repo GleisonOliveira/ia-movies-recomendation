@@ -3,6 +3,7 @@ import { Prisma } from '@/generatedprisma/client';
 import { RecommendService } from './recommend.service';
 import { NeuralComputerServiceFactory } from '../neural-computer-service-factory';
 import { MovieResponseDto } from '@/modules/movie/dto/movie.response.dto';
+import { ListMoviesResponseDto } from '@/modules/movie/dto/list.movies.response.dto';
 import { buildMovie } from '../../../../test/movie/movie-test-utils';
 
 // RecommendService delega recomendação ao NeuralComputerInterface e converte Movie → MovieResponseDto.
@@ -36,7 +37,7 @@ describe('RecommendService', () => {
     expect(service).toBeDefined();
   });
 
-  it('deve retornar filmes recomendados como MovieResponseDto', async () => {
+  it('deve retornar ListMoviesResponseDto com filmes recomendados', async () => {
     const movie = buildMovie({
       id: 10,
       title: 'Recommended',
@@ -48,21 +49,35 @@ describe('RecommendService', () => {
 
     expect(neuralComputerServiceFactory.create).toHaveBeenCalled();
     expect(mockRecommend).toHaveBeenCalledWith(1);
-    expect(result).toMatchObject([
-      {
-        id: 10,
-        title: 'Recommended',
-        vote_average: 7.5,
-      },
+    expect(result).toBeInstanceOf(ListMoviesResponseDto);
+    expect(result.data).toMatchObject([
+      { id: 10, title: 'Recommended', vote_average: 7.5 },
     ]);
   });
 
-  it('deve retornar array vazio quando nenhum filme é recomendado', async () => {
+  it('deve retornar ListMoviesResponseDto com data vazio quando nenhum filme é recomendado', async () => {
     mockRecommend.mockResolvedValue([]);
 
     const result = await service.recommend(1);
 
-    expect(result).toEqual([]);
+    expect(result).toBeInstanceOf(ListMoviesResponseDto);
+    expect(result.data).toEqual([]);
+  });
+
+  it('deve incluir meta com total correto', async () => {
+    const movies = [
+      buildMovie({ id: 1, vote_average: new Prisma.Decimal(8.0) }),
+      buildMovie({ id: 2, vote_average: new Prisma.Decimal(7.0) }),
+    ];
+    mockRecommend.mockResolvedValue(movies);
+
+    const result = await service.recommend(1);
+
+    expect(result.meta.total).toBe(2);
+    expect(result.meta.current_page).toBe(1);
+    expect(result.meta.last_page).toBe(1);
+    expect(result.meta.prev).toBeNull();
+    expect(result.meta.next).toBeNull();
   });
 
   it('deve converter vote_average de Decimal para number', async () => {
@@ -74,17 +89,17 @@ describe('RecommendService', () => {
 
     const result = await service.recommend(1);
 
-    expect(typeof result[0].vote_average).toBe('number');
-    expect(result[0].vote_average).toBeCloseTo(9.1);
+    expect(typeof result.data[0].vote_average).toBe('number');
+    expect(result.data[0].vote_average).toBeCloseTo(9.1);
   });
 
-  it('deve retornar instâncias de MovieResponseDto', async () => {
+  it('deve retornar data com instâncias de MovieResponseDto', async () => {
     const movie = buildMovie({ id: 7, vote_average: new Prisma.Decimal(6.0) });
     mockRecommend.mockResolvedValue([movie]);
 
     const result = await service.recommend(1);
 
-    expect(result[0]).toBeInstanceOf(MovieResponseDto);
+    expect(result.data[0]).toBeInstanceOf(MovieResponseDto);
   });
 
   it('deve passar userId correto para recommend do serviço neural', async () => {
@@ -123,9 +138,9 @@ describe('RecommendService', () => {
 
     const result = await service.recommend(1);
 
-    expect(result).toHaveLength(3);
-    expect(result.map((m) => m.id)).toEqual([1, 2, 3]);
-    expect(result.map((m) => m.title)).toEqual([
+    expect(result.data).toHaveLength(3);
+    expect(result.data.map((m) => m.id)).toEqual([1, 2, 3]);
+    expect(result.data.map((m) => m.title)).toEqual([
       'Primeiro',
       'Segundo',
       'Terceiro',

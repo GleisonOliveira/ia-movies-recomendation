@@ -1,9 +1,10 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderWithStore } from '@/test/testUtils';
+import type { Movie } from '@/services/movie/MovieService';
 import type { User } from '@/services/user/user-service';
 import { userReducer } from '@/store/users/usersSlice';
 import { UserDrawer } from './UserDrawer';
-import { buildUser } from '@/test/store/home/__fixtures__/homeThunksFixtures';
+import { buildMovie, buildUser } from '@/test/store/home/__fixtures__/homeThunksFixtures';
 import { buildHomePreloadedState } from '@/test/store/home/__fixtures__/homeComponentState';
 import { getAxiosMocks } from '@/test/utils/axiosMock';
 
@@ -40,6 +41,170 @@ describe('UserDrawer', () => {
     get.mockReset();
     post.mockReset();
     del.mockReset();
+  });
+
+  it('renders recommendations section when recommendations exist in state', async () => {
+    const user: User = buildUser({ id: 1, name: 'Ana', age: 28, latest_movies: [] });
+    const recMovie: Movie = buildMovie({ id: 99, title: 'Interstellar', external_id: 99 });
+
+    const { get } = getAxiosMocks();
+    // return recMovie from recommend endpoint so useEffect keeps recs populated
+    get.mockImplementation((url: string) => {
+      if (String(url).includes('recommend')) {
+        return Promise.resolve({ data: { data: [recMovie], meta: { total: 1, last_page: 1, current_page: 1, per_page: 10, prev: null, next: null } } });
+      }
+      return Promise.resolve({ data: { data: [], meta: { total: 0, last_page: 1, current_page: 1, per_page: 6, prev: null, next: null } } });
+    });
+
+    renderWithStore(<UserDrawer />, {
+      reducer: { home: userReducer },
+      preloadedState: buildHomePreloadedState({
+        selectedUser: user,
+        userState: { data: [user] },
+        movieState: {
+          userMovies: { loading: false, data: [], meta: null },
+          loading: false,
+          selected: null,
+          recommendations: { loading: false, data: [recMovie] },
+        },
+      }),
+    });
+
+    expect(await screen.findByText('Recomendações')).toBeInTheDocument();
+    expect(await screen.findByText('Interstellar')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Adicionar' }).length).toBeGreaterThan(0);
+  });
+
+  it('hides recommendations section when data is empty and not loading', async () => {
+    const user: User = buildUser({ id: 1, name: 'Ana', age: 28, latest_movies: [] });
+
+    const { get } = getAxiosMocks();
+    // return empty for all GETs including recommend
+    get.mockResolvedValue({
+      data: { data: [], meta: { total: 0, last_page: 1, current_page: 1, per_page: 6, prev: null, next: null } },
+    });
+
+    renderWithStore(<UserDrawer />, {
+      reducer: { home: userReducer },
+      preloadedState: buildHomePreloadedState({
+        selectedUser: user,
+        userState: { data: [user] },
+        movieState: {
+          userMovies: { loading: false, data: [], meta: null },
+          loading: false,
+          selected: null,
+          recommendations: { loading: false, data: [] },
+        },
+      }),
+    });
+
+    // wait for useEffects to settle (recommend GET returns empty)
+    await waitFor(() => {
+      expect(screen.queryByText('Recomendações')).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows recommendations loading indicator when recommendations.loading is true', () => {
+    const user: User = buildUser({ id: 1, name: 'Ana', age: 28, latest_movies: [] });
+
+    const { get } = getAxiosMocks();
+    let resolveRec!: (v: unknown) => void;
+    get.mockImplementation((url: string) => {
+      if ((url as string).includes('recommend')) {
+        return new Promise((res) => { resolveRec = res; });
+      }
+      return Promise.resolve({ data: { data: [], meta: { total: 0, last_page: 1, current_page: 1, per_page: 6, prev: null, next: null } } });
+    });
+
+    renderWithStore(<UserDrawer />, {
+      reducer: { home: userReducer },
+      preloadedState: buildHomePreloadedState({
+        selectedUser: user,
+        userState: { data: [user] },
+        movieState: {
+          userMovies: { loading: false, data: [], meta: null },
+          loading: false,
+          selected: null,
+          recommendations: { loading: true, data: [] },
+        },
+      }),
+    });
+
+    expect(screen.getByTestId('recommendations-loading')).toBeInTheDocument();
+
+    resolveRec({ data: { data: [], meta: { total: 0, last_page: 1, current_page: 1, per_page: 6, prev: null, next: null } } });
+  });
+
+  it('clicking Adicionar on recommendation dispatches addMovieToUser and shows toast on success', async () => {
+    const user: User = buildUser({ id: 1, name: 'Ana', age: 28, latest_movies: [] });
+    const recMovie: Movie = buildMovie({ id: 99, title: 'Interstellar', external_id: 99 });
+
+    const { get, post } = getAxiosMocks();
+    get.mockImplementation((url: string) => {
+      if ((url as string).includes('recommend')) {
+        return Promise.resolve({ data: { data: [recMovie], meta: { total: 1, last_page: 1, current_page: 1, per_page: 10, prev: null, next: null } } });
+      }
+      return Promise.resolve({ data: { data: [], meta: { total: 0, last_page: 1, current_page: 1, per_page: 6, prev: null, next: null } } });
+    });
+    post.mockResolvedValueOnce({ status: 200, data: user });
+
+    renderWithStore(<UserDrawer />, {
+      reducer: { home: userReducer },
+      preloadedState: buildHomePreloadedState({
+        selectedUser: user,
+        userState: { data: [user] },
+        movieState: {
+          userMovies: { loading: false, data: [], meta: null },
+          loading: false,
+          selected: null,
+          recommendations: { loading: false, data: [recMovie] },
+        },
+      }),
+    });
+
+    await screen.findByText('Interstellar');
+    // pick the enabled Adicionar button (the card one, not the disabled MovieSearch one)
+    const addBtns = screen.getAllByRole('button', { name: 'Adicionar' });
+    const enabledAddBtn = addBtns.find((b) => !b.hasAttribute('disabled'))!;
+    fireEvent.click(enabledAddBtn);
+    await waitFor(() => expect(post).toHaveBeenCalled());
+  });
+
+  it('clicking Adicionar on recommendation shows toast error and does not update list when endpoint fails', async () => {
+    const user: User = buildUser({ id: 1, name: 'Ana', age: 28, latest_movies: [] });
+    const recMovie: Movie = buildMovie({ id: 99, title: 'Interstellar', external_id: 99 });
+
+    const { get, post } = getAxiosMocks();
+    get.mockImplementation((url: string) => {
+      if ((url as string).includes('recommend')) {
+        return Promise.resolve({ data: { data: [recMovie], meta: { total: 1, last_page: 1, current_page: 1, per_page: 10, prev: null, next: null } } });
+      }
+      return Promise.resolve({ data: { data: [], meta: { total: 0, last_page: 1, current_page: 1, per_page: 6, prev: null, next: null } } });
+    });
+    post.mockRejectedValueOnce(new Error('Server error'));
+
+    renderWithStore(<UserDrawer />, {
+      reducer: { home: userReducer },
+      preloadedState: buildHomePreloadedState({
+        selectedUser: user,
+        userState: { data: [user] },
+        movieState: {
+          userMovies: { loading: false, data: [], meta: null },
+          loading: false,
+          selected: null,
+          recommendations: { loading: false, data: [recMovie] },
+        },
+      }),
+    });
+
+    await screen.findByRole('button', { name: 'Adicionar' });
+    await screen.findByText('Interstellar');
+    const addBtns = screen.getAllByRole('button', { name: 'Adicionar' });
+    const enabledAddBtn = addBtns.find((b) => !b.hasAttribute('disabled'))!;
+    fireEvent.click(enabledAddBtn);
+    await waitFor(() => expect(post).toHaveBeenCalled());
+    // recommendation still in list (not removed on error)
+    expect(await screen.findByText('Interstellar')).toBeInTheDocument();
   });
 
   it('renders loading while movies are loading', () => {

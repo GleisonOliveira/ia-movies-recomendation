@@ -1,10 +1,23 @@
 import { CamelCaseMeta } from '@/interfaces/meta/camel-case-meta';
 import { Expose, Transform, TransformFnParams } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export abstract class AbstractListResponseDto<T> {
+  @ApiProperty({ type: () => Object, isArray: true })
   @Expose()
   data: T[] = [];
 
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      total: { type: 'number' },
+      last_page: { type: 'number' },
+      current_page: { type: 'number' },
+      per_page: { type: 'number' },
+      prev: { type: 'number', nullable: true },
+      next: { type: 'number', nullable: true },
+    },
+  })
   @Expose()
   @Transform((value: TransformFnParams) => {
     const meta = value.value as CamelCaseMeta;

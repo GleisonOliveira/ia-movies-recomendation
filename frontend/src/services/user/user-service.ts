@@ -34,4 +34,9 @@ export class UserService {
   async removeMovieFromUser(payload: { user_id: number; movie_id: number }) {
     await this.httpClient.delete('/user/movie', { data: payload });
   }
+
+  async getRecommendations(userId: number) {
+    const { data } = await this.httpClient.get(`/user/${userId}/recommend`);
+    return userMoviesResponseSchema.parse(data);
+  }
 }

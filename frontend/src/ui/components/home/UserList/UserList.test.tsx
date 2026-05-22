@@ -1,4 +1,3 @@
-import { act } from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import { renderWithStore } from '@/test/testUtils';
 import type { User } from '@/services/user/user-service';

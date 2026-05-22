@@ -24,7 +24,6 @@ import { UserResponseDto } from './dto/user.response.dto';
 import { AddUserMovieDto } from './dto/add-user-movie.dto';
 import { ListUserMoviesDto } from './dto/list-user-movies.dto';
 import { ListMoviesResponseDto } from '../movie/dto/list.movies.response.dto';
-import { MovieResponseDto } from '../movie/dto/movie.response.dto';
 import { UserService } from './service/user-service/user-service';
 import { RecommendService } from '../neural-computer/services/recommend.service';
 import type { Response } from 'express';
@@ -98,10 +97,10 @@ export class UserController {
 
   @Get(':userId/recommend')
   @ApiOperation({ summary: 'Recommend up to 5 movies for a user' })
-  @ApiOkResponse({ type: [MovieResponseDto] })
+  @ApiOkResponse({ type: ListMoviesResponseDto })
   async recommend(
     @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<MovieResponseDto[]> {
+  ): Promise<ListMoviesResponseDto> {
     return this.recommendService.recommend(userId);
   }
 }

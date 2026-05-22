@@ -3,6 +3,7 @@ import { userReducer } from '@/store/users/usersSlice';
 import {
   addMovieToUser,
   createUser,
+  loadRecommendations,
   loadUserMovies,
   loadUsers,
   removeMovieFromUser,
@@ -25,6 +26,8 @@ import type {
   UserServiceGetAllReturn,
   UserServiceGetMoviesByUserIdArg0,
   UserServiceGetMoviesByUserIdReturn,
+  UserServiceGetRecommendationsArg0,
+  UserServiceGetRecommendationsReturn,
   UserServiceRemoveMovieFromUserArg0,
   UserServiceRemoveMovieFromUserReturn,
 } from '@/test/store/home/usersThunksTypes';
@@ -41,6 +44,7 @@ function createMockUserService() {
     getMoviesByUserId: jest.fn<UserServiceGetMoviesByUserIdReturn, [UserServiceGetMoviesByUserIdArg0]>(),
     addMovieToUser: jest.fn<UserServiceAddMovieToUserReturn, [UserServiceAddMovieToUserArg0]>(),
     removeMovieFromUser: jest.fn<UserServiceRemoveMovieFromUserReturn, [UserServiceRemoveMovieFromUserArg0]>(),
+    getRecommendations: jest.fn<UserServiceGetRecommendationsReturn, [UserServiceGetRecommendationsArg0]>(),
   };
 }
 
@@ -223,6 +227,54 @@ describe('usersThunks', () => {
 
     await store.dispatch(addMovieToUser({ userId: 9, movie }));
     expect(store.getState().home.toast.message).toBe('Erro ao adicionar filme ao usuário');
+  });
+
+  it('loadRecommendations: fulfilled updates recommendations.data', async () => {
+    const { userService } = getMockContainer();
+    const movie: Movie = buildMovie({ id: 42, vote_average: 8 });
+    userService.getRecommendations.mockResolvedValue({
+      data: [movie],
+      meta: { total: 1, last_page: 1, current_page: 1, per_page: 10, prev: null, next: null },
+    });
+
+    const store = mkStore();
+    await store.dispatch(loadRecommendations(9));
+
+    expect(userService.getRecommendations).toHaveBeenCalledWith(9);
+    expect(store.getState().home.movieState.recommendations.data).toHaveLength(1);
+    expect(store.getState().home.movieState.recommendations.data[0]?.id).toBe(42);
+  });
+
+  it('loadRecommendations: rejected sets data to [] without toast', async () => {
+    const { userService } = getMockContainer();
+    userService.getRecommendations.mockRejectedValue(new Error('network'));
+
+    const store = mkStore();
+    await store.dispatch(loadRecommendations(9));
+
+    expect(store.getState().home.movieState.recommendations.data).toHaveLength(0);
+    expect(store.getState().home.movieState.recommendations.loading).toBe(false);
+    // no toast on recommendation failure
+    expect(store.getState().home.toast.open).toBe(false);
+  });
+
+  it('addMovieToUser: passes perPage to payload for drawer update', async () => {
+    const { userService } = getMockContainer();
+    const user: User = buildUser({ id: 9, name: 'Ana', age: 28, latest_movies: [] });
+    const movie: Movie = buildMovie({ id: 7, vote_average: 8 });
+    userService.addMovieToUser.mockResolvedValue(user);
+
+    const store = mkStore();
+    store.dispatch({
+      type: 'home/loadUsers/fulfilled',
+      payload: { data: [user], meta: null },
+    });
+
+    await store.dispatch(addMovieToUser({ userId: 9, movie, perPage: 6 }));
+
+    expect(userService.addMovieToUser).toHaveBeenCalledWith({ user_id: 9, movie_id: 7 });
+    expect(store.getState().home.toast.open).toBe(true);
+    expect(store.getState().home.toast.severity).toBe('success');
   });
 
   it('removeMovieFromUser: fulfilled removes latest_movies', async () => {

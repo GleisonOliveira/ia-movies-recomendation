@@ -29,6 +29,7 @@ import type {
 
 describe('UserController', () => {
   let controller: UserController;
+  let module: TestingModule;
   const prismaService = {
     user: {
       findMany: jest.fn<UserFindManyResult, [Prisma.UserFindManyArgs]>(),
@@ -61,7 +62,7 @@ describe('UserController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       controllers: [UserController],
       providers: [
         UserService,
@@ -269,5 +270,31 @@ describe('UserController', () => {
         per_page: 10,
       }),
     );
+  });
+
+  it('should return ListMoviesResponseDto from recommend endpoint', async () => {
+    const movie = buildMovie({
+      id: 10,
+      title: 'Recommended Movie',
+      vote_average: new Prisma.Decimal(8.0),
+    });
+
+    const neuralFactory = module.get<{ create: jest.Mock }>(
+      NeuralComputerServiceFactory,
+    );
+    neuralFactory.create.mockReturnValue({
+      recommend: jest.fn().mockResolvedValue([movie]),
+    });
+
+    const result = await controller.recommend(1);
+
+    expect(result.data[0]).toMatchObject({
+      id: 10,
+      title: 'Recommended Movie',
+      vote_average: 8.0,
+    });
+    expect(result.meta.total).toBe(1);
+    expect(result.meta.current_page).toBe(1);
+    expect(result.meta.last_page).toBe(1);
   });
 });

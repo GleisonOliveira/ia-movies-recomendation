@@ -25,3 +25,6 @@ export type UserServiceRemoveMovieFromUserArg0 = Parameters<
 export type MovieServiceGetAllReturn = ReturnType<MovieService['getAll']>;
 export type MovieServiceGetAllArg0 = Parameters<MovieService['getAll']>[0];
 
+export type UserServiceGetRecommendationsReturn = ReturnType<UserService['getRecommendations']>;
+export type UserServiceGetRecommendationsArg0 = Parameters<UserService['getRecommendations']>[0];
+

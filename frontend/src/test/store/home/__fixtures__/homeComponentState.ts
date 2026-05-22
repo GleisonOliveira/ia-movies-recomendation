@@ -26,6 +26,10 @@ export function buildHomePreloadedState(overrides: PartialDeep<HomeState> = {}) 
           ...base.movieState.userMovies,
           ...(overrides.movieState?.userMovies ?? {}),
         },
+        recommendations: {
+          ...base.movieState.recommendations,
+          ...(overrides.movieState?.recommendations ?? {}),
+        },
       },
       createUserModal: {
         ...base.createUserModal,
