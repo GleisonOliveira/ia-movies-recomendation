@@ -21,6 +21,7 @@
     "typecheck": "tsc --noEmit",
     "command:tmdb-database-sync": "ts-node -r tsconfig-paths/register src/main.command.ts tmdb-database-sync",
     "command:movie-neural-train": "ts-node -r tsconfig-paths/register src/main.command.ts movie-neural-train",
+    "command:movie-neural-embed": "ts-node -r tsconfig-paths/register src/main.command.ts movie-neural-embed",
     "prisma-migrate-dev": "npx prisma migrate dev --name init",
     "prisma-migrate-create-dev": "npx prisma migrate dev --name ",
     "prisma-generate": "npx prisma generate"

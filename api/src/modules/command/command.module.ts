@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { MovieModule } from '../movie/movie.module';
 import { ConnectorsModule } from '../connectors/connectors.module';
 import { MovieNeuralTrainCommand } from './movie/movie-neural-train/movie-neural-train-command';
+import { MovieNeuralEmbedCommand } from './movie/movie-neural-embed/movie-neural-embed-command';
 import { PrismaService } from '../prisma/prisma-service/prisma-service';
 import { NeuralComputerModule } from '../neural-computer/neural-computer.module';
 
@@ -13,6 +14,7 @@ import { NeuralComputerModule } from '../neural-computer/neural-computer.module'
   providers: [
     TmdbDatabaseSyncCommand,
     MovieNeuralTrainCommand,
+    MovieNeuralEmbedCommand,
     TmdbConnector,
     PrismaService,
   ],

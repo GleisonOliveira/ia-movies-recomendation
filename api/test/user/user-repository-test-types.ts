@@ -26,3 +26,9 @@ export type UserMovieCreateResult =
 
 export type MovieFindManyArgs = Prisma.MovieFindManyArgs;
 export type UserFindManyArgs = Prisma.UserFindManyArgs;
+export type UserMovieFindManyArgs = Prisma.UserMovieFindManyArgs;
+
+// Resultado de getAllInteractions: só seleciona user_id e movie_id
+export type InteractionFindManyResult = Promise<
+  { user_id: number; movie_id: number }[]
+>;

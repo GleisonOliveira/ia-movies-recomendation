@@ -10,6 +10,11 @@ import { UserDataNormalizationService } from './services/normalizers/user-data-n
 import { Neo4jService } from '@/modules/neo4j/neo4j.service';
 import { MovieCollectionService } from './services/collectors/movie-collection.service';
 import { UserCollectionService } from './services/collectors/user-collection.service';
+import { NormalizationService } from './tmdb/services/normalization.service';
+import { TrainingDatasetService } from './tmdb/services/training-dataset.service';
+import { ModelTrainingService } from './tmdb/services/model-training.service';
+import { ModelExportService } from './tmdb/services/model-export.service';
+import { MovieEmbeddingService } from './tmdb/services/movie-embedding.service';
 
 @Module({
   imports: [TensorflowModule, Neo4jModule, UserModule, MovieModule],
@@ -25,6 +30,11 @@ import { UserCollectionService } from './services/collectors/user-collection.ser
     MovieCollectionService,
     UserCollectionService,
     Neo4jService,
+    NormalizationService,
+    TrainingDatasetService,
+    ModelTrainingService,
+    ModelExportService,
+    MovieEmbeddingService,
   ],
   exports: [
     NeuralComputerServiceFactory,
