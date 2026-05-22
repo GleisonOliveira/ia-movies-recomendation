@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as path from 'path';
 import { ConfigService } from '@nestjs/config';
+import { NotFoundException } from '@nestjs/common';
 import { TmdbNeuralService } from './tmdb-neural-service';
 import { TfjsNodeService } from '@/modules/tensorflow/tfjs-node.service';
 import { UserRepository } from '@/modules/user/repository/user-repository';
@@ -14,6 +15,7 @@ import { TrainingDatasetService } from './services/training-dataset.service';
 import { ModelTrainingService } from './services/model-training.service';
 import { ModelExportService } from './services/model-export.service';
 import { MovieEmbeddingService } from './services/movie-embedding.service';
+import { NormalizationAggregatesRepository } from '../repository/normalization-aggregates-repository';
 import { Neo4jService } from '@/modules/neo4j/neo4j.service';
 import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
 import { Prisma } from '@/generatedprisma/client';
@@ -39,17 +41,55 @@ const FIXTURE_MODEL_PATH = path.resolve(
   'test/neural-computer/fixtures/affinity',
 );
 
+function buildAggregates(
+  overrides: Partial<{
+    age_min: number;
+    age_max: number;
+    popularity_min: number;
+    popularity_max: number;
+    vote_average_min: number;
+    vote_average_max: number;
+    language_to_index: Record<string, number>;
+  }> = {},
+) {
+  return {
+    id: 1,
+    age_min: 18,
+    age_max: 60,
+    popularity_min: 0,
+    popularity_max: 1000,
+    vote_average_min: 0,
+    vote_average_max: 10,
+    language_to_index: { en: 0, pt: 1 },
+    created_at: new Date(),
+    ...overrides,
+  };
+}
+
 describe('TmdbNeuralService', () => {
   let service: TmdbNeuralService;
   let prismaService: {
-    movie: { findMany: jest.Mock<MovieFindManyResult, [MovieFindManyArgs]> };
-    user: { findMany: jest.Mock<Promise<User[]>, [UserFindManyArgs]> };
+    movie: {
+      findMany: jest.Mock<MovieFindManyResult, [MovieFindManyArgs]>;
+      findUnique: jest.Mock;
+    };
+    user: {
+      findMany: jest.Mock<Promise<User[]>, [UserFindManyArgs]>;
+      findUnique: jest.Mock;
+    };
     userMovie: {
       findMany: jest.Mock<InteractionFindManyResult, [UserMovieFindManyArgs]>;
+    };
+    normalizationAggregates: {
+      findFirst: jest.Mock;
     };
   };
   let neo4jService: {
     upsertMovieEmbedding: jest.Mock<Promise<void>, [number, number[]]>;
+    findSimilarMovies: jest.Mock<
+      Promise<number[]>,
+      [number[], number, number[]]
+    >;
   };
 
   beforeEach(async () => {
@@ -58,22 +98,30 @@ describe('TmdbNeuralService', () => {
         findMany: jest
           .fn<MovieFindManyResult, [MovieFindManyArgs]>()
           .mockResolvedValue([]),
+        findUnique: jest.fn().mockResolvedValue(null),
       },
       user: {
         findMany: jest
           .fn<Promise<User[]>, [UserFindManyArgs]>()
           .mockResolvedValue([]),
+        findUnique: jest.fn().mockResolvedValue(null),
       },
       userMovie: {
         findMany: jest
           .fn<InteractionFindManyResult, [UserMovieFindManyArgs]>()
           .mockResolvedValue([]),
       },
+      normalizationAggregates: {
+        findFirst: jest.fn().mockResolvedValue(null),
+      },
     };
     neo4jService = {
       upsertMovieEmbedding: jest
         .fn<Promise<void>, [number, number[]]>()
         .mockResolvedValue(undefined),
+      findSimilarMovies: jest
+        .fn<Promise<number[]>, [number[], number, number[]]>()
+        .mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -91,6 +139,7 @@ describe('TmdbNeuralService', () => {
         ModelTrainingService,
         ModelExportService,
         MovieEmbeddingService,
+        NormalizationAggregatesRepository,
         {
           provide: ConfigService,
           useValue: {
@@ -289,6 +338,146 @@ describe('TmdbNeuralService', () => {
       await expect(service.embedMovies()).rejects.toThrow(
         'Neo4j connection failed',
       );
+    });
+  });
+
+  // ── recommend() ──────────────────────────────────────────────────────────
+  // Usa fixture do user-encoder pré-treinado em FIXTURE_MODEL_PATH para gerar o
+  // embedding do usuário via TensorFlow. Prisma e Neo4j são mockados.
+
+  describe('recommend()', () => {
+    it('deve lançar NotFoundException quando usuário não existe', async () => {
+      prismaService.user.findUnique.mockResolvedValue(null);
+      prismaService.normalizationAggregates.findFirst.mockResolvedValue(
+        buildAggregates(),
+      );
+      prismaService.userMovie.findMany.mockResolvedValue([]);
+
+      await expect(service.recommend(999)).rejects.toThrow(NotFoundException);
+    });
+
+    it('deve lançar NotFoundException quando agregados de normalização não existem', async () => {
+      const user = buildUser({ id: 1, age: 30 });
+      prismaService.user.findUnique.mockResolvedValue(user);
+      prismaService.normalizationAggregates.findFirst.mockResolvedValue(null);
+      prismaService.userMovie.findMany.mockResolvedValue([]);
+
+      await expect(service.recommend(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('deve retornar lista vazia quando Neo4j não encontra filmes similares', async () => {
+      const user = buildUser({ id: 1, age: 30 });
+      prismaService.user.findUnique.mockResolvedValue(user);
+      prismaService.normalizationAggregates.findFirst.mockResolvedValue(
+        buildAggregates(),
+      );
+      prismaService.userMovie.findMany.mockResolvedValue([]);
+      neo4jService.findSimilarMovies.mockResolvedValue([]);
+
+      const result = await service.recommend(1);
+
+      expect(result).toEqual([]);
+    });
+
+    it('deve passar watchedMovieIds corretos para o Neo4j', async () => {
+      const user = buildUser({ id: 1, age: 30 });
+      prismaService.user.findUnique.mockResolvedValue(user);
+      prismaService.normalizationAggregates.findFirst.mockResolvedValue(
+        buildAggregates(),
+      );
+      // getWatchedMovieIdsByUserId usa userMovie.findMany com select movie_id
+      prismaService.userMovie.findMany.mockResolvedValue([
+        { user_id: 1, movie_id: 10 },
+        { user_id: 1, movie_id: 20 },
+      ]);
+      neo4jService.findSimilarMovies.mockResolvedValue([]);
+
+      await service.recommend(1);
+
+      expect(neo4jService.findSimilarMovies).toHaveBeenCalledWith(
+        expect.any(Array),
+        5,
+        [10, 20],
+      );
+    });
+
+    it('deve retornar filmes encontrados no Prisma a partir dos IDs do Neo4j', async () => {
+      const user = buildUser({ id: 1, age: 30 });
+      const movie1 = buildMovie({ id: 100 });
+      const movie2 = buildMovie({ id: 200 });
+
+      prismaService.user.findUnique.mockResolvedValue(user);
+      prismaService.normalizationAggregates.findFirst.mockResolvedValue(
+        buildAggregates(),
+      );
+      prismaService.userMovie.findMany.mockResolvedValue([]);
+      neo4jService.findSimilarMovies.mockResolvedValue([100, 200]);
+      prismaService.movie.findUnique
+        .mockResolvedValueOnce(movie1)
+        .mockResolvedValueOnce(movie2);
+
+      const result = await service.recommend(1);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe(100);
+      expect(result[1].id).toBe(200);
+    });
+
+    it('deve filtrar filmes nulos quando IDs do Neo4j não existem no Prisma', async () => {
+      const user = buildUser({ id: 1, age: 30 });
+      const movie1 = buildMovie({ id: 100 });
+
+      prismaService.user.findUnique.mockResolvedValue(user);
+      prismaService.normalizationAggregates.findFirst.mockResolvedValue(
+        buildAggregates(),
+      );
+      prismaService.userMovie.findMany.mockResolvedValue([]);
+      neo4jService.findSimilarMovies.mockResolvedValue([100, 999]);
+      // id 100 existe, id 999 foi deletado do Prisma mas ainda existe no Neo4j
+      prismaService.movie.findUnique
+        .mockResolvedValueOnce(movie1)
+        .mockResolvedValueOnce(null);
+
+      const result = await service.recommend(1);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(100);
+    });
+
+    it('deve gerar embedding via user-encoder do fixture e chamar Neo4j com array de números', async () => {
+      const user = buildUser({ id: 1, age: 30 });
+
+      prismaService.user.findUnique.mockResolvedValue(user);
+      prismaService.normalizationAggregates.findFirst.mockResolvedValue(
+        buildAggregates({ age_min: 18, age_max: 60 }),
+      );
+      prismaService.userMovie.findMany.mockResolvedValue([]);
+      neo4jService.findSimilarMovies.mockResolvedValue([]);
+
+      await service.recommend(1);
+
+      const [embedding] = neo4jService.findSimilarMovies.mock.calls[0];
+      expect(Array.isArray(embedding)).toBe(true);
+      expect(embedding.length).toBeGreaterThan(0);
+      expect(embedding.every((v: unknown) => typeof v === 'number')).toBe(true);
+    });
+
+    it('deve normalizar a idade com min-max dos agregados', async () => {
+      // age=18, age_min=18, age_max=60 → normalizedAge=0
+      // age=60, age_min=18, age_max=60 → normalizedAge=1
+      // Verificamos indiretamente que o fluxo não lança com valores extremos.
+      for (const age of [18, 60]) {
+        jest.clearAllMocks();
+        const user = buildUser({ id: 1, age });
+        prismaService.user.findUnique.mockResolvedValue(user);
+        prismaService.normalizationAggregates.findFirst.mockResolvedValue(
+          buildAggregates({ age_min: 18, age_max: 60 }),
+        );
+        prismaService.userMovie.findMany.mockResolvedValue([]);
+        neo4jService.findSimilarMovies.mockResolvedValue([]);
+
+        await expect(service.recommend(1)).resolves.not.toThrow();
+      }
     });
   });
 });

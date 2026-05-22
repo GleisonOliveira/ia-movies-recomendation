@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { RecomendationModule } from './modules/recomendation/recomendation.module';
 import { ConnectorsModule } from '@/modules/connectors/connectors.module';
 import { ConfigModule } from '@nestjs/config';
 import { CommandModule } from './modules/command/command.module';
@@ -21,7 +20,6 @@ import { Neo4jModule } from './modules/neo4j/neo4j.module';
     CommandModule,
     ConnectorsModule,
     PrismaModule,
-    RecomendationModule,
     HttpModule,
     UserModule,
     MovieModule,

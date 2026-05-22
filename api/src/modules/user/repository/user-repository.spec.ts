@@ -303,6 +303,84 @@ describe('UserRepository', () => {
     });
   });
 
+  describe('findById', () => {
+    it('should return user when found', async () => {
+      const user = buildUser({ id: 42 });
+      prismaService.user.findUnique.mockResolvedValue(user);
+
+      await expect(repository.findById(42)).resolves.toEqual(user);
+
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 42 },
+      });
+    });
+
+    it('should return null when user not found', async () => {
+      prismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(repository.findById(99)).resolves.toBeNull();
+
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 99 },
+      });
+    });
+  });
+
+  describe('getWatchedMovieIdsByUserId', () => {
+    it('should return movie ids watched by user', async () => {
+      prismaService.userMovie.findMany.mockResolvedValue([
+        { movie_id: 10 },
+        { movie_id: 20 },
+      ]);
+
+      await expect(repository.getWatchedMovieIdsByUserId(1)).resolves.toEqual([
+        10, 20,
+      ]);
+
+      expect(prismaService.userMovie.findMany).toHaveBeenCalledWith({
+        where: { user_id: 1 },
+        select: { movie_id: true },
+      });
+    });
+
+    it('should return empty array when user has no watched movies', async () => {
+      prismaService.userMovie.findMany.mockResolvedValue([]);
+
+      await expect(repository.getWatchedMovieIdsByUserId(1)).resolves.toEqual(
+        [],
+      );
+    });
+  });
+
+  describe('getAllInteractions', () => {
+    it('should return all user-movie interactions', async () => {
+      const interactions = [
+        { user_id: 1, movie_id: 10 },
+        { user_id: 1, movie_id: 20 },
+        { user_id: 2, movie_id: 10 },
+      ];
+
+      prismaService.userMovie.findMany.mockResolvedValue(interactions);
+
+      await expect(repository.getAllInteractions()).resolves.toEqual(
+        interactions,
+      );
+
+      expect(prismaService.userMovie.findMany).toHaveBeenCalledWith({
+        select: {
+          user_id: true,
+          movie_id: true,
+        },
+      });
+    });
+
+    it('should return empty array when no interactions exist', async () => {
+      prismaService.userMovie.findMany.mockResolvedValue([]);
+
+      await expect(repository.getAllInteractions()).resolves.toEqual([]);
+    });
+  });
+
   describe('loadUsersInChunks', () => {
     it('should load all users in a single chunk when users count is less than chunkSize', async () => {
       const users = [

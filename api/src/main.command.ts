@@ -10,4 +10,4 @@ async function bootstrap() {
     'verbose',
   ]);
 }
-bootstrap();
+void bootstrap();

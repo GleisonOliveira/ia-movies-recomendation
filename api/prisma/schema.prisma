@@ -38,6 +38,20 @@ model Movie {
   @@map("movie")
 }
 
+model NormalizationAggregates {
+  id               Int      @id @default(autoincrement())
+  age_min          Float
+  age_max          Float
+  popularity_min   Float
+  popularity_max   Float
+  vote_average_min Float
+  vote_average_max Float
+  language_to_index Json
+  created_at       DateTime @default(now())
+
+  @@map("normalization_aggregates")
+}
+
 model UserMovie {
   user_id Int
   movie_id Int

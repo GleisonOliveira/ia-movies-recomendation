@@ -135,6 +135,10 @@ export class UserRepository {
     };
   }
 
+  async findById(id: number): Promise<User | null> {
+    return this.prismaService.user.findUnique({ where: { id } });
+  }
+
   async loadUsersInChunks(
     onChunk: (users: User[]) => Promise<void>,
     chunkSize: number,
@@ -165,6 +169,14 @@ export class UserRepository {
         movie_id: true,
       },
     });
+  }
+
+  async getWatchedMovieIdsByUserId(userId: number): Promise<number[]> {
+    const links = await this.prismaService.userMovie.findMany({
+      where: { user_id: userId },
+      select: { movie_id: true },
+    });
+    return links.map((l) => l.movie_id);
   }
 
   private async ensureUserExists(userId: number) {

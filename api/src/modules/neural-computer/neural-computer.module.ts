@@ -15,6 +15,8 @@ import { TrainingDatasetService } from './tmdb/services/training-dataset.service
 import { ModelTrainingService } from './tmdb/services/model-training.service';
 import { ModelExportService } from './tmdb/services/model-export.service';
 import { MovieEmbeddingService } from './tmdb/services/movie-embedding.service';
+import { RecommendService } from './services/recommend.service';
+import { NormalizationAggregatesRepository } from './repository/normalization-aggregates-repository';
 
 @Module({
   imports: [TensorflowModule, Neo4jModule, UserModule, MovieModule],
@@ -35,10 +37,14 @@ import { MovieEmbeddingService } from './tmdb/services/movie-embedding.service';
     ModelTrainingService,
     ModelExportService,
     MovieEmbeddingService,
+    RecommendService,
+    NormalizationAggregatesRepository,
   ],
   exports: [
     NeuralComputerServiceFactory,
     'NeuralComputerFactoryServiceInterface',
+    RecommendService,
+    NormalizationAggregatesRepository,
   ],
 })
 export class NeuralComputerModule {}

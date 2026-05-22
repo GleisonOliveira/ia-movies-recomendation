@@ -26,8 +26,6 @@ export class MovieNeuralTrainCommand extends CommandRunner {
   }
 
   async #process(): Promise<void> {
-    const neuralComputerService = this.neuralComputerFactory.create();
-
-    await neuralComputerService.train();
+    await this.neuralComputerFactory.create().train();
   }
 }

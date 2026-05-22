@@ -14,7 +14,10 @@ export type MovieFindManyResult = Promise<Movie[]>;
 
 export type UserMovieFindUniqueResult = Promise<UserMovie | null>;
 export type UserMovieDeleteResult = Promise<UserMovie>;
-export type UserMovieFindManyResult = Promise<UserMovie[]>;
+export type WatchedMovieIdsResult = Promise<{ movie_id: number }[]>;
+export type UserMovieFindManyResult = Promise<
+  UserMovie[] | { user_id: number; movie_id: number }[] | { movie_id: number }[]
+>;
 export type UserMovieCountResult = Promise<number>;
 
 export type UserMovieCreateWithRelationsPayload = Prisma.UserMovieGetPayload<{

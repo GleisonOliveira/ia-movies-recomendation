@@ -4,6 +4,8 @@ import {
   Delete,
   Get,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   Res,
@@ -22,13 +24,18 @@ import { UserResponseDto } from './dto/user.response.dto';
 import { AddUserMovieDto } from './dto/add-user-movie.dto';
 import { ListUserMoviesDto } from './dto/list-user-movies.dto';
 import { ListMoviesResponseDto } from '../movie/dto/list.movies.response.dto';
+import { MovieResponseDto } from '../movie/dto/movie.response.dto';
 import { UserService } from './service/user-service/user-service';
+import { RecommendService } from '../neural-computer/services/recommend.service';
 import type { Response } from 'express';
 
 @ApiTags('user')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly recommendService: RecommendService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List users' })
@@ -87,5 +94,14 @@ export class UserController {
     @Query() params: ListUserMoviesDto,
   ): Promise<ListMoviesResponseDto> {
     return this.userService.getMoviesByUserId(params);
+  }
+
+  @Get(':userId/recommend')
+  @ApiOperation({ summary: 'Recommend up to 5 movies for a user' })
+  @ApiOkResponse({ type: [MovieResponseDto] })
+  async recommend(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<MovieResponseDto[]> {
+    return this.recommendService.recommend(userId);
   }
 }

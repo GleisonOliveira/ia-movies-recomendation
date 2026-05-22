@@ -3,6 +3,8 @@ import { UserController } from './user.controller';
 import { UserService } from './service/user-service/user-service';
 import { UserRepository } from './repository/user-repository';
 import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
+import { RecommendService } from '../neural-computer/services/recommend.service';
+import { NeuralComputerServiceFactory } from '../neural-computer/neural-computer-service-factory';
 import { ListUserDto } from './dto/list.user.dto';
 import { UserCreateDto } from './dto/user.create.dto';
 import { AddUserMovieDto } from './dto/add-user-movie.dto';
@@ -65,6 +67,11 @@ describe('UserController', () => {
         UserService,
         UserRepository,
         { provide: PrismaService, useValue: prismaService },
+        {
+          provide: NeuralComputerServiceFactory,
+          useValue: { create: jest.fn() },
+        },
+        RecommendService,
       ],
     }).compile();
 

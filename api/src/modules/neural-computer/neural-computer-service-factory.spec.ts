@@ -12,6 +12,7 @@ import { TrainingDatasetService } from './tmdb/services/training-dataset.service
 import { ModelTrainingService } from './tmdb/services/model-training.service';
 import { ModelExportService } from './tmdb/services/model-export.service';
 import { MovieEmbeddingService } from './tmdb/services/movie-embedding.service';
+import { NormalizationAggregatesRepository } from './repository/normalization-aggregates-repository';
 import { TfjsNodeService } from '@/modules/tensorflow/tfjs-node.service';
 import { Neo4jService } from '@/modules/neo4j/neo4j.service';
 import { PrismaService } from '@/modules/prisma/prisma-service/prisma-service';
@@ -37,6 +38,7 @@ describe('NeuralComputerServiceFactory', () => {
         ModelTrainingService,
         ModelExportService,
         MovieEmbeddingService,
+        NormalizationAggregatesRepository,
         { provide: TfjsNodeService, useValue: { tf: {} } },
         {
           provide: Neo4jService,
@@ -48,6 +50,10 @@ describe('NeuralComputerServiceFactory', () => {
             movie: { findMany: jest.fn().mockResolvedValue([]) },
             user: { findMany: jest.fn().mockResolvedValue([]) },
             userMovie: { findMany: jest.fn().mockResolvedValue([]) },
+            normalizationAggregates: {
+              create: jest.fn().mockResolvedValue({}),
+              findFirst: jest.fn().mockResolvedValue(null),
+            },
           },
         },
         {
